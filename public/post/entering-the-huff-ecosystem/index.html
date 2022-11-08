@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  
+  <meta name="author" content="merkleplant">
+
+  
+  
+  <meta name="description" content="This article introduces the evolving Huff language and
+ecosystem by developing a non-trivial contract, an Ownable contract with a
+Two-Step Transfer pattern, called TSOwnable.">
+  
+
+  
+  <link rel="icon" href="http://garden.merkleplant.xyz/favicon.ico">
+
+  
+  
+  <meta name="keywords" content=" hugo  latex  theme ">
+  
+
+  
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"
+  integrity="sha384-KiWOvVjnN8qwAZbuQyWDIbfCLFhLXNETzBQjA/92pIowpC0d2O3nppDGQVgwd2nB" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"
+  integrity="sha384-0fdwu/T/EQMsQlrHCCHoH10pkPLlKA1jL5dFyUOvB3lfeT2540/2g6YgSi2BL14p" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"
+  integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+      throwOnError: false
+    });
+  });
+</script>
+
+
+  
+
+  
+  <meta property="og:title" content="Entering the Huff Ecosystem" />
+<meta property="og:description" content="This article introduces the evolving Huff language and
+ecosystem by developing a non-trivial contract, an Ownable contract with a
+Two-Step Transfer pattern, called TSOwnable." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-07-04T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-07-04T00:00:00+00:00" />
+
+
+
+  
+  <link rel="canonical" href="http://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/">
+
+  
+  
+  <meta itemprop="name" content="Entering the Huff Ecosystem">
+<meta itemprop="description" content="This article introduces the evolving Huff language and
+ecosystem by developing a non-trivial contract, an Ownable contract with a
+Two-Step Transfer pattern, called TSOwnable."><meta itemprop="datePublished" content="2022-07-04T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2022-07-04T00:00:00+00:00" />
+<meta itemprop="wordCount" content="3760">
+<meta itemprop="keywords" content="" />
+
+  
+  <link media="screen" rel="stylesheet" href='http://garden.merkleplant.xyz/css/common.css'>
+  <link media="screen" rel="stylesheet" href='http://garden.merkleplant.xyz/css/content.css'>
+
+  
+  
+  <title>Entering the Huff Ecosystem - merkleplant&#39;s garden </title>
+  
+
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Entering the Huff Ecosystem"/>
+<meta name="twitter:description" content="This article introduces the evolving Huff language and
+ecosystem by developing a non-trivial contract, an Ownable contract with a
+Two-Step Transfer pattern, called TSOwnable."/>
+
+
+  
+<link rel="stylesheet" href='http://garden.merkleplant.xyz/css/single.css'>
+
+</head>
+
+<body>
+  <div id="wrapper">
+    <header id="header">
+  <h1>
+    <a href="http://garden.merkleplant.xyz/">merkleplant&#39;s garden </a>
+  </h1>
+
+  <nav>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/">Posts</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/wikis/">Wikis</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="https://merkleplant.xyz">About</a>
+    </span>
+    
+  </nav>
+</header>
+
+    
+<main id="main" class="post">
+  
+  
+  <h1>Entering the Huff Ecosystem</h1>
+  
+  
+  <article class="content">
+    
+    <p>This article introduces the evolving <a href="https://huff.sh/">Huff</a> language and
+ecosystem by developing a non-trivial contract, an <code>Ownable</code> contract with a
+Two-Step Transfer pattern, called <code>TSOwnable</code>.</p>
+<p>Along the way we will dive into tools such as the new <a href="https://github.com/huff-language/huff-rs"><code>huff-rs</code></a>
+compiler and <a href="https://github.com/huff-language/foundry-huff"><code>HuffDeployer</code></a> library,
+some better known tools such as <code>forge</code> and <code>cast</code>, and will learn how to
+write low-level EVM code.</p>
+<p>In order to follow along, please keep the fantastic <a href="http://evm.codes/">evm.codes</a>
+website open.</p>
+<p>Note that this post is not an introduction to how the EVM works.
+There are other great resources for that, e.g. <a href="https://blog.merkleplant.xyz/bb38e175cc404111a391907c4975426d">The EVM Handbook</a>.</p>
+<h2 id="about-huff">About Huff</h2>
+<p>Note that this paragraph is copied from the <a href="https://github.com/devtooligan/awesome-huff"><code>awesome-huff</code></a>
+repo created by the one and only <a href="https://twitter.com/devtooligan">devtooligan</a>.</p>
+<blockquote>
+<p>Huff is a low-level programming language designed for developing highly
+optimized smart contracts that run on the Ethereum Virtual Machine (EVM).
+Huff does not hide the inner workings of the EVM.
+Instead, Huff exposes its programming stack and provides useful tools like
+constants and macros.</p>
+</blockquote>
+<blockquote>
+<p>Initially developed by the <a href="https://github.com/AztecProtocol">Aztec Protocol</a>
+team, Huff was created to write <a href="https://github.com/AztecProtocol/weierstrudel">Weierstrudel</a>,
+an on-chain elliptical curve arithmetic library that requires incredibly
+optimized code which neither Solidity nor Yul could provide.</p>
+</blockquote>
+<blockquote>
+<p>Huff can be used to write highly-efficient smart contracts for use in
+production, or it can serve as a way for beginners to learn more about the EVM.</p>
+</blockquote>
+<p>Please take some time to read the <a href="https://github.com/AztecProtocol/huff">README</a>
+in AztecProtocol’s Huff implementation to gain a feeling of how the language
+looks like.</p>
+<h2 id="the-tsownable-contract">The <code>TSOwnable</code> Contract</h2>
+<p>The famous <code>Ownable</code> contract has the weakness that the contract’s owner can
+accidentally be set to an address that is not controlled by the project.</p>
+<p>Using a Two-Step Transfer pattern reduces the risk of accidentally loosing
+control over a contract. The newly set owner (called <code>pendingOwner</code>) first has
+to accept the ownership of the contract before the owner switch is completed.
+In case the <code>pendingOwner</code> is accidentally set to an address not controlled by
+the project, the contract’s ownership is not lost directly and the
+<code>pendingOwner</code> can be reset.</p>
+<p>Take a look at this <a href="https://github.com/byterocket/solrocket/blob/main/src/TSOwnable.sol">TSOwnable</a> implementation in Solidity.
+The goal of the post is to write a functionally-equivalent contract in Huff.</p>
+<h2 id="setting-up-the-project">Setting up the Project</h2>
+<p>We will be using the <a href="https://getfoundry.sh/">foundry toolkit</a>,
+a “<em>blazing fast, portable and modular toolkit for Ethereum application development</em>&quot;.</p>
+<p>To compile Huff contracts to EVM bytecode we will use the new <a href="https://github.com/huff-language/huff-rs">huff-rs</a> compiler.</p>
+<p>After installation, create and <code>cd</code> into a new directory, and run <code>forge init</code>.</p>
+<p>In order to compile and deploy Huff contracts from within the <code>forge</code> tool,
+install Huff’s <a href="https://github.com/huff-language/foundry-huff">HuffDeployer</a>
+library with <code>forge install huff-language/foundry-huff</code>.</p>
+<p>If running <code>forge test</code> only emits green colors, you are ready to start.</p>
+<h2 id="storage-slots-and-constructor">Storage Slots and Constructor</h2>
+<p>First, delete the default contract in the <code>src/</code> directory and create a new
+file called <code>TSOwnable.huff</code>.</p>
+<p>Looking at the <code>TSOwnable</code> Solidity reference implementation, we see that we
+need two storage variables, <code>address public owner</code> and
+<code>address public pendingOwner</code>.
+Huff does not support the concept of variables, but rather expects us to manage
+the storage directly.</p>
+<p>Declare two constants, each holding a reference to a storage slot:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define constant OWNER_SLOT = FREE_STORAGE_POINTER()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define constant PENDING_OWNER_SLOT = FREE_STORAGE_POINTER()
+</span></span></span></code></pre></div><p>The <code>FREE_STORAGE_POINTER()</code> macro is a builtin macro that returns, well, the
+next free storage slot.</p>
+<p>EVM storage slots are starting from 0, which means that <code>OWNER_SLOT = 0x00</code> and
+<code>PENDING_OWNER_SLOT = 0x01</code>. Note that while one storage slot contains 32 bytes
+of data, the slots itself are addressed incrementally.</p>
+<p>Next, we need the constructor.
+It should save the deployer address as <code>owner</code> and leave the <code>pendingOwner</code>
+variable as zero.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro CONSTRUCTOR() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">caller</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span> <span style="color:#8f5902;font-style:italic">// Store msg.sender as owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>The <code>CONSTRUCTOR</code> is a reserved keyword in Huff.</p>
+<p>The <code>takes (0) returns (0)</code> signature indicates how many elements the macro
+consumes from the stack and how many elements the macro puts on the stack after
+execution. The signature does not indicate how many function arguments,
+i.e. data read from calldata, the macro is expecting.</p>
+<p>In this case, the constructor is neither expecting any arguments nor any
+elements on the stack.</p>
+<p>First, the constructor pushes the caller’s address (via the <code>caller</code> opcode)
+and the <code>owner</code> variable’s storage slot (via the <code>[OWNER_SLOT]</code> Huff
+instruction) on the stack.</p>
+<p>Afterwards, the <code>sstore</code> opcode is executed. The <code>sstore</code> opcode consumes two
+elements from the stack, the first element being the key and the second element
+the value, and stores the value in the storage slot at position key.</p>
+<p>Visualizing the stack after each instruction looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro CONSTRUCTOR() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>                  <span style="color:#8f5902;font-style:italic">// [] - Stack is empty
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">caller</span>        <span style="color:#8f5902;font-style:italic">// [msg.sender] - Caller is pushed on the stack
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span>  <span style="color:#8f5902;font-style:italic">// [0x00, msg.sender] - The OWNER_SLOT (0x00) is pushed on the stack
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">sstore</span>        <span style="color:#8f5902;font-style:italic">// [] - The sstore opcode consumed both elements from the stack
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>                  <span style="color:#8f5902;font-style:italic">// The first element, 0x00, is interpreted as the storage key
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>                  <span style="color:#8f5902;font-style:italic">// The second element, msg.sender, is the value stored
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Checking the <code>TSOwnable</code> Solidity reference implementation indicates that our
+constructor should now be functionally equivalent.</p>
+<h2 id="getter-functions">Getter Functions</h2>
+<p>Now we need to create two getter functions in order to read the <code>owner</code> and
+<code>pendingOwner</code> variables.</p>
+<p>The functions should load 32 bytes (one word) from the variable’s storage slot
+and return them.</p>
+<p>Take a moment to read about the the <code>mstore</code>, <code>sload</code>, and <code>return</code> opcodes on
+<a href="https://evm.codes">evm.codes</a>.</p>
+<p>The <code>sload</code> opcode consumes one element from the stack, interprets that element
+as a storage slot reference, and pushes the storage slot’s content on the stack.</p>
+<p>The <code>mstore</code> opcode consumes two elements from the stack. It stores the second
+element at the memory offset of the first element.</p>
+<p>The <code>return</code> opcode expects two elements on the stack as well. The first element
+is interpreted as the memory offset, the second element as the amount of bytes
+to return. Furthermore, <code>return</code> signals a successful exit.</p>
+<p>Having an understanding of the three opcodes, the getter functions can be
+implemented as follows:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_GET_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span>   <span style="color:#8f5902;font-style:italic">// Load owner address from storage and push onto stack
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">mstore</span>          <span style="color:#8f5902;font-style:italic">// Store owner to memory at index 0x00
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x20</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#204a87;font-weight:bold">return</span>     <span style="color:#8f5902;font-style:italic">// Exit context, return 0x20=32 bytes from memory, starting at memory index 0x00
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_GET_PENDING_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">mstore</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x20</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#204a87;font-weight:bold">return</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>While this macros seem to be able to return the corresponding addresses, how can
+an external contract call them? After all, a macro is not a function.</p>
+<h2 id="function-dispatching">Function Dispatching</h2>
+<p>In order to call the macro for external calls to <code>owner()</code> and <code>pendingOwner()</code>,
+respectively, we need to dispatch function calls to the corresponding macros.</p>
+<p>The main entrypoint in Huff contracts is defined via the <code>MAIN()</code> macro.
+A function signature is defined as the first 4 bytes of the <code>keccak256</code> hash of
+a function signature written in Solidity.</p>
+<h3 id="computing-the-function-signatures">Computing the Function Signatures</h3>
+<p>In order to copmute the function signatures we use foundry’s <code>cast</code> tool.
+It is as easy as running <code>cast sig &quot;&lt;function signature&gt;&quot;</code>.</p>
+<p>Running <code>cast sig &quot;owner()&quot;</code> and <code>cast sig &quot;pendingOwner()&quot;</code> returns
+<code>0x8da5cb5b</code> and <code>0xe30c3978</code>. The function signature is always the first
+4 bytes of the calldata in a call.</p>
+<p>Now, we only need to extract the first 4 bytes, compare them to our signatures
+and invoke the corresponding macros.</p>
+<p>The code to do that looks as follows:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro MAIN() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">calldataload</span> <span style="color:#0000cf;font-weight:bold">0xe0</span> <span style="color:#000">shr</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;owner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0x8da5cb5b</span> <span style="color:#000">eq</span> <span style="color:#000">get_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;pendingOwner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0xe30c3978</span> <span style="color:#000">eq</span> <span style="color:#000">get_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>The first line inside the <code>MAIN</code> macro reads 32 bytes of calldata starting from
+index 0 and shifts them right by <code>0xe0 = 224 bits</code>.</p>
+<p>Remember, that 32 bytes are 256 bits and 4 bytes are 32 bits.
+Computing <code>256 - 224 = 32</code>, indicates that we moved 224 bits “out” to the right,
+leaving us with only the first 4 bytes, i.e. 32 bits.</p>
+<p>Afterwards, we duplicate these 4 bytes on the stack via the <code>dup1</code> opcode, push
+the function signature on the stack, and check if the two are equal via the <code>eq</code>
+opcode.</p>
+<p>The <code>eq</code> opcode consumes two elements from the stack and pushes one back. If the
+two elements on the stack were equal, the resulting element on the stack is 1,
+otherwise 0.</p>
+<p>The <code>get_owner</code> and <code>get_pending_owner</code> Huff instructions are labels that get
+translated from the Huff compiler into byte offsets in the deployed code.
+The <code>jumpi</code> opcode jumps to a specific location inside the code, i.e. to the
+labels, if the second element on the stack, i.e. the result of the <code>eq</code>
+execution, is unequal to zero.</p>
+<p>To summarize:</p>
+<blockquote>
+<p>If the first 4 bytes of the calldata equal our function selector, we invoke
+the corresponding macro. The macro exits the context and returns the corresponding
+address.</p>
+</blockquote>
+<h2 id="deploying-the-contract-and-testing-the-constructor">Deploying the Contract and Testing the Constructor</h2>
+<p>Now let’s test whats implemented so far. Delete the default <code>Contract.t.sol</code>
+contract in the <code>test/</code> directory, create a new contract called
+<code>TSOwnable.t.sol</code>, and copy the following code into the file:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// SPDX-License-Identifier: GPL-3.0-or-later
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">pragma solidity</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">13</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#4e9a06">&#34;forge-std/Test.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">HuffDeployer</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;foundry-huff/HuffDeployer.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">interface</span> <span style="color:#000">ITSOwnable</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">external</span> <span style="color:#204a87;font-weight:bold">view</span> <span style="color:#204a87;font-weight:bold">returns</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">pendingOwner</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">external</span> <span style="color:#204a87;font-weight:bold">view</span> <span style="color:#204a87;font-weight:bold">returns</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">setPendingOwner</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">pendingOwner</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">external</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">acceptOwnership</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">external</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">contract</span> <span style="color:#000">TSOwnableTest</span> <span style="color:#204a87;font-weight:bold">is</span> <span style="color:#000">Test</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// The System under Test.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">ITSOwnable</span> <span style="color:#000">sut</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">setUp</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">impl</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">HuffDeployer</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">deploy</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;TSOwnable&#34;</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">sut</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ITSOwnable</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">impl</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">testDeploymentInvariants</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">sut</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">(),</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87">this</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">sut</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">pendingOwner</span><span style="color:#000;font-weight:bold">(),</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>This code should look familiar to anyone using foundry already. The only new
+thing is the <code>HuffDeployer</code> library used in the <code>setUp()</code> function.</p>
+<p><code>forge</code>, the foundry tool used i.a. for testing, is not (<em>yet?</em>) natively capable
+of compiling Huff contracts. The <code>HuffDeployer</code> library internally calls the
+<code>huff-rs</code> compiler, reads the returned contract’s bytecode, deploys it, and
+returns the resulting address.</p>
+<p>The test function, <code>testDeploymentInvariants()</code>, checks that our constructor and
+getter functions are working as intended.</p>
+<p>Now let’s run forge test to see where we introduced mistakes&hellip;</p>
+<p>You should receive an output containing something like this:</p>
+<pre tabindex="0"><code>Running 1 test for test/TSOwnable.t.sol:TSOwnableTest
+[FAIL. Reason: Setup failed: FFI disabled: run again with `--ffi` if you want to allow tests to call external scripts.] setUp() (gas: 0)
+Test result: FAILED. 0 passed; 1 failed; finished in 1.87ms
+
+Failed tests:
+[FAIL. Reason: Setup failed: FFI disabled: run again with `--ffi` if you want to allow tests to call external scripts.] setUp() (gas: 0)
+
+Encountered a total of 1 failing tests, 0 tests succeeded
+</code></pre><h2 id="forge-and-the-dangerous---ffi-flag">Forge and the Dangerous <code>--ffi</code> Flag</h2>
+<p>The <code>forge</code> tool complains that FFI is disabled. FFI stands for
+<em>Foreign Function Interface</em> and enables <code>forge</code> to call external programs.</p>
+<ul>
+<li>
+<p>Which program does <code>forge</code> try to call here?</p>
+<p>The <code>FoundryDeployer</code> library has to call the external <code>huff-rs</code> binary to
+compile the <code>TSOwnable</code> Huff contract and receive the bytecode.</p>
+</li>
+<li>
+<p>Why is <code>--ffi</code> dangerous?</p>
+<p>Never call <code>forge</code> with the <code>--ffi</code> flag if you don’t know which external
+programs are called!</p>
+<p>Via <code>--ffi</code>, harmless Solidity code is able to call any program on your
+computer with any arguments. A Solidity test could, for example, call a
+python interpreter, with some python code saved as <code>string memory</code> inside
+the Solidity file, and <strong>DOS your local anvil node</strong>.</p>
+</li>
+</ul>
+<p>However, for the moment the <code>HuffDeployer</code> library’s external calls seem
+harmless and it is safe to call <code>forge</code> with <code>--ffi</code> enabled.</p>
+<p>Calling <code>forge test --ffi</code> should now output something like this:</p>
+<pre tabindex="0"><code>Running 1 test for test/TSOwnable.t.sol:TSOwnableTest
+[PASS] testDeploymentInvariants() (gas: 10385)
+Test result: ok. 1 passed; 0 failed; finished in 12.45ms
+</code></pre><p>In the following, the rest of the test cases are omitted as they are quite
+boring.
+The important thing I wanted to show is how to set up the test framework.
+If you are interested, you can check out the tests in the
+<code>byterocket/TSOwnable-Huff</code> repo <a href="https://github.com/byterocket/TSOwnable-Huff/blob/main/test/TSOwnable.t.sol">here</a>.</p>
+<h2 id="removing-payable">Removing <code>payable</code></h2>
+<p>You may have noticed that the <code>MAIN()</code> macro is currently payable.
+As there will be no functionality to withdraw ETH from the contract, let’s
+revert in case someone wants to send some.</p>
+<p>The <code>callvalue</code> opcode pushes the amount of ETH deposited for this execution
+onto the stack. We can check via the <code>eq</code> opcode whether that amount is zero,
+and if not jump to a revert statement.</p>
+<p>Refactoring the entrypoint to being nonpayable leads to:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro MAIN() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">callvalue</span> <span style="color:#000">throw_error</span> <span style="color:#000">jumpi</span> <span style="color:#8f5902;font-style:italic">// Revert if ETH send
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">calldataload</span> <span style="color:#0000cf;font-weight:bold">0xe0</span> <span style="color:#000">shr</span> <span style="color:#8f5902;font-style:italic">// Get function signature
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;owner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0x8da5cb5b</span> <span style="color:#000">eq</span> <span style="color:#000">get_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;pendingOwner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0xe30c3978</span> <span style="color:#000">eq</span> <span style="color:#000">get_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">throw_error</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Note that it is important to have the <code>throw_error</code> label before the “function”
+macro calls, as a call with no fitting function signature would otherwise just
+run through the dispatching and execute the <code>OWNABLE_GET_OWNER()</code> macro, or
+whichever macro comes first.</p>
+<p>You should think of the first statement following the dispatching as the
+<code>fallback</code> of our contract. Whether you want to implement such a <code>fallback</code> or
+not, it should be well defined.</p>
+<h2 id="implementing-the-modifier-macros">Implementing the <code>modifier</code> Macros</h2>
+<p>In order to access control the <code>acceptOwnership()</code> and <code>setPendingOwner()</code>
+functions we need some kind of modifier. As nearly always, the Huff equivalent
+is a macro.</p>
+<p>The first macro, <code>ACCESS_ONLY_OWNER()</code>, reverts if the caller is not the
+current owner, while the second macro, <code>ACCESS_ONLY_PENDING_OWNER()</code>, reverts
+if the caller is not the current pending owner, respectively.</p>
+<p>The macros can be implemented as follows:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro ACCESS_ONLY_OWNER() = takes(0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span> <span style="color:#000">caller</span> <span style="color:#000">eq</span> <span style="color:#000">is_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">is_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro ACCESS_ONLY_PENDING_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span> <span style="color:#000">caller</span> <span style="color:#000">eq</span> <span style="color:#000">is_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">is_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>First, the corresponding storage slots are loaded from storage and pushed on
+the stack. Afterwards, the caller address is pushed on the stack. The <code>eq</code>
+opcode consumes both elements from the stack and pushes 0 on the stack if they
+are equal, otherwise 1.</p>
+<p>The following <code>jumpi</code> opcode jumps to the <code>is_owner</code> (or <code>is_pending_owner</code>)
+label in case the first element on the stack is 0, i.e. if the word loaded
+from storage equals the current caller address. If this is the case the macro
+ends, enabling further execution.</p>
+<p>If the caller is not authorized, the <code>jumpi</code> opcode does not jump and the
+execution runs into the <code>revert</code> opcode.</p>
+<h2 id="the-state-mutating-functions">The State Mutating Functions</h2>
+<p>The next step is to implement the state mutating functions, <code>acceptOwnership()</code>
+and <code>setPendingOwner()</code>.</p>
+<p>Let’s start with the function dispatching.
+Running <code>cast sig &quot;acceptOwnership()&quot;</code> returns <code>0x79ba5097</code>,
+<code>cast sig &quot;setPendingOwner()&quot;</code> outputs <code>0xc42069ec</code>.</p>
+<p>Adding these signatures to the <code>MAIN()</code> macro leads to:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro MAIN() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">callvalue</span> <span style="color:#000">throw_error</span> <span style="color:#000">jumpi</span> <span style="color:#8f5902;font-style:italic">// Revert if ETH send
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">calldataload</span> <span style="color:#0000cf;font-weight:bold">0xe0</span> <span style="color:#000">shr</span> <span style="color:#8f5902;font-style:italic">// Get function signature
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;setPendingOwner(address)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0xc42069ec</span> <span style="color:#000">eq</span> <span style="color:#000">set_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;acceptOwnership()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0x79ba5097</span> <span style="color:#000">eq</span> <span style="color:#000">accept_ownership</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;owner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0x8da5cb5b</span> <span style="color:#000">eq</span> <span style="color:#000">get_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;pendingOwner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0xe30c3978</span> <span style="color:#000">eq</span> <span style="color:#000">get_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">throw_error</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">set_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_SET_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">accept_ownership</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_ACCEPT_OWNERSHIP</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Heurika, the <code>MAIN()</code> macro is complete!</p>
+<h2 id="implemeting-acceptownership">Implemeting <code>acceptOwnership()</code></h2>
+<p>The <code>acceptOwnership()</code> macro has to authorize the caller as being the current
+pending owner, store the caller’s address as the new owner, clear the pending
+owner by setting it to the zero address, and stop the execution.</p>
+<p>There are no interesting new opcodes involved:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_ACCEPT_OWNERSHIP() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#8f5902;font-style:italic">// Authorize caller via the &#34;modifier&#34; macro
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">ACCESS_ONLY_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Store msg.sender as owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">caller</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Clear pending owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">stop</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><h2 id="implementing-setpendingowner">Implementing <code>setPendingOwner()</code></h2>
+<p>The <code>setPendingOwner()</code> macro is a bit more complicated.
+We have to authorize the caller as being the current owner, read the address
+argument from the calldata, and mask it to an address.
+Additionally, the function should not accept the caller itself as pending owner,
+store the new pending owner, and, lastly, stop the execution.</p>
+<p>First, let’s see how to read an address argument:
+<code>0x04 calldataload ADDRESS_MASK()</code></p>
+<p>As mentioned already, the first four bytes of the calldata are the function
+signature. Therefore, we read one word, i.e. 32 bytes, from the calldata
+starting at byte number 4 (<code>0x04 calldataload</code>).</p>
+<p>What about the <code>MASK_ADDRESS()</code> macro?
+Note that we do not have any guarantees that the caller indeed only send
+20 bytes, i.e. an address, (+4 bytes of function signature) to the contract.
+To make sure that we do not save any dirty bits into storage that could lead to
+issues or even security vulnerabilities, we clear the remaining bytes by
+setting them to zero.</p>
+<p>The <code>MASK_ADDRESS()</code> macro looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro ADDRESS_MASK() = takes (1) returns (1) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">and</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>It expects one element on the stack (the data to mask), and leaves one
+additional element on the stack (the data with the first 12 bytes set to zero).</p>
+<p>Now we can be certain that no dirty bits will ever be stored to storage!</p>
+<p>Continuing with the <code>setPendingOwner()</code> implementation, the macro has to revert
+in case the owner tries to set the pending owner to itself. As the <code>eq</code> opcode
+consumes the two elements it compares, we need to duplicate the argument read
+from the calldata first.
+(We could also read it from the calldata again, but that would be more costly)</p>
+<p>The rest of the statements should be familiar already, leaving us with the
+following implementation:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_SET_PENDING_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">ACCESS_ONLY_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Read argument and mask to address
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x04</span> <span style="color:#000">calldataload</span> <span style="color:#000">ADDRESS_MASK</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Revert if address equals owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#000">caller</span> <span style="color:#000">eq</span> <span style="color:#000">throw_error</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Store address as pending owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">stop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">throw_error</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Congratulations for making it so far! The contract is nearly finished 🔥</p>
+<h2 id="defining-the-external-interface">Defining the External Interface</h2>
+<p>Huff supports defining the external interface. There is not too much to say about
+this:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Returns the current owner address.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function owner() view returns (address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Returns the current pending owner address.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function pendingOwner() view returns (address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Sets the pending owner address.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev Only callable by owner.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function setPendingOwner(address) nonpayable returns ()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Accepts the ownership.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev Only callable by pending owner.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function acceptOwnership() nonpayable returns ()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Emitted when new owner set.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define event NewOwner(address,address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Emitted when new pending owner set.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define event NewPendingOwner(address,address)
+</span></span></span></code></pre></div><h3 id="declaring-and-emitting-events">Declaring and Emitting Events</h3>
+<p>One thing omitted so far is the emission of events. There are two events that
+have to be send:</p>
+<ul>
+<li>The <code>event NewOwner(indexed address, indexed address)</code> will be emitted whenever
+a new ownership is accepted</li>
+<li>The <code>event newPendingOwner(indexed address, indexed address)</code> indicates that a
+new pending owner got set.</li>
+</ul>
+<p>The first thing to do is creating the event signature, which is defined as the
+<code>keccak256</code> hash of its Solidity signature.</p>
+<p>Using the <code>cast</code> tool again:</p>
+<ul>
+<li><code>cast keccak &quot;NewOwner(address,address)&quot;</code>
+⇒ <code>0x70aea8d848e8a90fb7661b227dc522eb6395c3dac71b63cb59edd5c9899b2364</code></li>
+<li><code>cast keccak &quot;NewPendingOwner(address,address)&quot;</code>
+⇒ <code>0xb3d55174552271a4f1aaf36b72f50381e892171636b3fb5447fe00e995e7a37b</code></li>
+</ul>
+<p>Next, check the <code>log</code> opcodes on <a href="https://evm.codes">evm.codes</a>.
+Our events have have 3 topics:</p>
+<ol>
+<li>The name of the event</li>
+<li>The first address argument</li>
+<li>The second address argument</li>
+</ol>
+<p>Having 3 topics means we have to use the <code>log3</code> opcode. It consumes 5 elements
+from the stack. The first 2 are needed to emit memory data, which our events do
+not have.</p>
+<p>The next elements are the topics, starting from 1 up to 3. Heading to the
+Solidity docs indicates the first topic is the event signature, i.e. the hashes
+we produced beforehand. The next two elements are the arguments.</p>
+<h2 id="putting-all-this-together">Putting all this together:</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// cast keccak &#34;NewOwner(address,address)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define constant EVENT_NEW_OWNER
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0x70aea8d848e8a90fb7661b227dc522eb6395c3dac71b63cb59edd5c9899b2364</span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// cast keccak &#34;NewPendingOwner(address,address)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define constant EVENT_NEW_PENDING_OWNER
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0xb3d55174552271a4f1aaf36b72f50381e892171636b3fb5447fe00e995e7a37b</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Inside macro OWNABLE_SET_PENDING_OWNER:
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Emit NewPendingOwner event
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#0000cf;font-weight:bold">0x04</span> <span style="color:#000">calldataload</span> <span style="color:#000">MASK_ADDRESS</span><span style="color:#000;font-weight:bold">()</span>    <span style="color:#8f5902;font-style:italic">// [newPendingOwner]
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span>          <span style="color:#8f5902;font-style:italic">// [oldPendingOwner, newPendingOwner]
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">EVENT_NEW_PENDING_OWNER</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#8f5902;font-style:italic">// [0x00, 0x00, eventSignature, oldPendingOwner, newPendingOwner]
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">log3</span>                                <span style="color:#8f5902;font-style:italic">// []
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Inside macro OWNABLE_ACCEPT_OWNERSHIP:
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Emit NewOwner event
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">caller</span>                              <span style="color:#8f5902;font-style:italic">// [newOwner]
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span>                  <span style="color:#8f5902;font-style:italic">// [oldOwner, newOwner]
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">EVENT_NEW_OWNER</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span>         <span style="color:#8f5902;font-style:italic">// [0x00, 0x00, eventSignature, oldOwner, newOwner]
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">log3</span>                                <span style="color:#8f5902;font-style:italic">// []
+</span></span></span></code></pre></div><h2 id="the-full-contract">The Full Contract</h2>
+<p>🔥🔥🔥 for making it this far!</p>
+<p>Your locally developed Huff contract should now look similar to this:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @title TSOwnable
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">///
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev An Ownable Implementation using Two-Step Transfer Pattern
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">///
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @author merkleplant
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// External Interface
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Returns the current owner address.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function owner() view returns (address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Returns the current pending owner address.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function pendingOwner() view returns (address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Sets the pending owner address.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev Only callable by owner.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function setPendingOwner(address) nonpayable returns ()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Accepts the ownership.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev Only callable by pending owner.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define function acceptOwnership() nonpayable returns ()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Emitted when new owner set.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define event NewOwner(address,address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @notice Emitted when new pending owner set.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define event NewPendingOwner(address,address)
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Event Signatures
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// cast keccak &#34;NewOwner(address,address)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define constant EVENT_NEW_OWNER
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0x70aea8d848e8a90fb7661b227dc522eb6395c3dac71b63cb59edd5c9899b2364</span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// cast keccak &#34;NewPendingOwner(address,address)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#8f5902;font-style:italic">#define constant EVENT_NEW_PENDING_OWNER
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0xb3d55174552271a4f1aaf36b72f50381e892171636b3fb5447fe00e995e7a37b</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Storage
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define constant OWNER_SLOT = FREE_STORAGE_POINTER()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define constant PENDING_OWNER_SLOT = FREE_STORAGE_POINTER()
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Constructor
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro CONSTRUCTOR() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">caller</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>  <span style="color:#8f5902;font-style:italic">// Store msg.sender as owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Helpers
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro ADDRESS_MASK() = takes (1) returns (1) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>	<span style="color:#0000cf;font-weight:bold">0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#000">and</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Access Handler
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro ACCESS_ONLY_OWNER() = takes(0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span> <span style="color:#000">caller</span> <span style="color:#000">eq</span> <span style="color:#000">is_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">is_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro ACCESS_ONLY_PENDING_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span> <span style="color:#000">caller</span> <span style="color:#000">eq</span> <span style="color:#000">is_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">is_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Mutating Functions
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_SET_PENDING_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">ACCESS_ONLY_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Read argument and mask to address
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x04</span> <span style="color:#000">calldataload</span> <span style="color:#000">ADDRESS_MASK</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Revert if address equals owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#000">caller</span> <span style="color:#000">eq</span> <span style="color:#000">throw_error</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Duplicate address on stack
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Emit NewPendingOwner event
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">EVENT_NEW_PENDING_OWNER</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">log3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Store address as pending owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">stop</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">throw_error</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_ACCEPT_OWNERSHIP() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">ACCESS_ONLY_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Emit NewOwner event
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">caller</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">EVENT_NEW_OWNER</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">log3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Store msg.sender as owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">caller</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Clear pending owner
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sstore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">stop</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// View Functions
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_GET_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">mstore</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x20</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#204a87;font-weight:bold">return</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro OWNABLE_GET_PENDING_OWNER() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">[</span><span style="color:#000">PENDING_OWNER_SLOT</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">sload</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">mstore</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x20</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#204a87;font-weight:bold">return</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// -----------------------------------------------------------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Function Dispatching
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">#define macro MAIN() = takes (0) returns (0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">callvalue</span> <span style="color:#000">throw_error</span> <span style="color:#000">jumpi</span> <span style="color:#8f5902;font-style:italic">// Revert if ETH send
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">calldataload</span> <span style="color:#0000cf;font-weight:bold">0xe0</span> <span style="color:#000">shr</span> <span style="color:#8f5902;font-style:italic">// Get function signature
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;setPendingOwner(address)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0xc42069ec</span> <span style="color:#000">eq</span> <span style="color:#000">set_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;acceptOwnership()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0x79ba5097</span> <span style="color:#000">eq</span> <span style="color:#000">accept_ownership</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;owner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0x8da5cb5b</span> <span style="color:#000">eq</span> <span style="color:#000">get_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// cast sig &#34;pendingOwner()&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">dup1</span> <span style="color:#0000cf;font-weight:bold">0xe30c3978</span> <span style="color:#000">eq</span> <span style="color:#000">get_pending_owner</span> <span style="color:#000">jumpi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">throw_error</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#0000cf;font-weight:bold">0x00</span> <span style="color:#000">revert</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">set_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_SET_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">accept_ownership</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_ACCEPT_OWNERSHIP</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f57900">get_pending_owner</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">OWNABLE_GET_PENDING_OWNER</span><span style="color:#000;font-weight:bold">()</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div>
+    
+  </article>
+  <div class="paginator">
+    
+    <a class="link" href="http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/">← prev</a>
+    
+    
+    <a class="link" href="http://garden.merkleplant.xyz/post/introduction-to-solmate/">next →</a>
+    
+  </div>
+  <div class="comment">
+    
+    
+    
+    
+    
+    
+  </div>
+  
+</main>
+
+    <footer id="footer">
+  <div>
+    <span>© 2019</span> - <span>2022</span>
+  </div>
+
+  <div>
+    <span>Powered by </span>
+    <a class="link" href="https://gohugo.io/">Hugo</a>
+    <span> 🍦 Theme </span>
+    <a class="link" href="https://github.com/queensferryme/hugo-theme-texify">TeXify</a>
+  </div>
+
+  <div class="footnote">
+    <span>Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
+<a class=link href=https://github.com/pmerkleplant>github</a>, or via
+<a class=link href="mailto:me@merkleplant.xyz">email</a> |
+<a class=link href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh target=_blank rel=noopener>CC BY-NC-SA 4.0</a>
+</span>
+  </div>
+</footer>
+
+  </div>
+
+  
+  
+
+  
+  
+
+  
+  
+
+</body>
+
+</html>

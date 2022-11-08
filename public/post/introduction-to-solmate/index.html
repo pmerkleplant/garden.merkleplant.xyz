@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  
+  <meta name="author" content="merkleplant">
+
+  
+  
+  <meta name="description" content="The solmate contracts from t11s are
+&ldquo;not designed with user safety in mind&rdquo;. Implicit invariants are expected
+to be followed, and it&rsquo;s easy to shoot yourself in the foot.
+Therefore, I thought it&rsquo;s a good idea to introduce some of the contracts,
+their footguns, and cross-check them with the OpenZeppelin library.">
+  
+
+  
+  <link rel="icon" href="http://garden.merkleplant.xyz/favicon.ico">
+
+  
+  
+  <meta name="keywords" content=" hugo  latex  theme ">
+  
+
+  
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"
+  integrity="sha384-KiWOvVjnN8qwAZbuQyWDIbfCLFhLXNETzBQjA/92pIowpC0d2O3nppDGQVgwd2nB" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"
+  integrity="sha384-0fdwu/T/EQMsQlrHCCHoH10pkPLlKA1jL5dFyUOvB3lfeT2540/2g6YgSi2BL14p" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"
+  integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+      throwOnError: false
+    });
+  });
+</script>
+
+
+  
+
+  
+  <meta property="og:title" content="Introduction to solmate" />
+<meta property="og:description" content="The solmate contracts from t11s are
+&ldquo;not designed with user safety in mind&rdquo;. Implicit invariants are expected
+to be followed, and it&rsquo;s easy to shoot yourself in the foot.
+Therefore, I thought it&rsquo;s a good idea to introduce some of the contracts,
+their footguns, and cross-check them with the OpenZeppelin library." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://garden.merkleplant.xyz/post/introduction-to-solmate/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-11-08T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-11-08T00:00:00+00:00" />
+
+
+
+  
+  <link rel="canonical" href="http://garden.merkleplant.xyz/post/introduction-to-solmate/">
+
+  
+  
+  <meta itemprop="name" content="Introduction to solmate">
+<meta itemprop="description" content="The solmate contracts from t11s are
+&ldquo;not designed with user safety in mind&rdquo;. Implicit invariants are expected
+to be followed, and it&rsquo;s easy to shoot yourself in the foot.
+Therefore, I thought it&rsquo;s a good idea to introduce some of the contracts,
+their footguns, and cross-check them with the OpenZeppelin library."><meta itemprop="datePublished" content="2022-11-08T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2022-11-08T00:00:00+00:00" />
+<meta itemprop="wordCount" content="108">
+<meta itemprop="keywords" content="" />
+
+  
+  <link media="screen" rel="stylesheet" href='http://garden.merkleplant.xyz/css/common.css'>
+  <link media="screen" rel="stylesheet" href='http://garden.merkleplant.xyz/css/content.css'>
+
+  
+  
+  <title>Introduction to solmate - merkleplant&#39;s garden </title>
+  
+
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Introduction to solmate"/>
+<meta name="twitter:description" content="The solmate contracts from t11s are
+&ldquo;not designed with user safety in mind&rdquo;. Implicit invariants are expected
+to be followed, and it&rsquo;s easy to shoot yourself in the foot.
+Therefore, I thought it&rsquo;s a good idea to introduce some of the contracts,
+their footguns, and cross-check them with the OpenZeppelin library."/>
+
+
+  
+<link rel="stylesheet" href='http://garden.merkleplant.xyz/css/single.css'>
+
+</head>
+
+<body>
+  <div id="wrapper">
+    <header id="header">
+  <h1>
+    <a href="http://garden.merkleplant.xyz/">merkleplant&#39;s garden </a>
+  </h1>
+
+  <nav>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/">Posts</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/wikis/">Wikis</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="https://merkleplant.xyz">About</a>
+    </span>
+    
+  </nav>
+</header>
+
+    
+<main id="main" class="post">
+  
+  
+  <h1>Introduction to solmate</h1>
+  
+  
+  <article class="content">
+    
+    <p>The <code>solmate</code> contracts from <a href="https://twitter.com/transmissions11">t11s</a> are
+&ldquo;<em>not designed with user safety in mind</em>&rdquo;. Implicit invariants are expected
+to be followed, and it&rsquo;s easy to shoot yourself in the foot.</p>
+<p>Therefore, I thought it&rsquo;s a good idea to introduce some of the contracts,
+their footguns, and cross-check them with the OpenZeppelin library.</p>
+<h2 id="evm-expeditions-at-byterockethttpsbyterocketcom">EVM Expeditions at <a href="https://byterocket.com">byterocket</a></h2>
+<p>Recently, we at <a href="https://byterocket.com">byterocket</a> started to share internal
+learning sessions under the term <a href="https://www.youtube.com/playlist?list=PLxO4n4c2l1TIukYArtqectoOoCv3ZF0A7"><em>EVM Expeditions</em></a>.</p>
+<p>If you ever wanted to konw how to create an overflow in <code>solmate</code>&rsquo;s ERC20 token,
+or finally want to understand the assembly in the <code>SafeTransferLib</code>, this
+presentation is for you.</p>
+<ul>
+<li><a href="https://youtu.be/IXzY6yUo1t4?list=PLxO4n4c2l1TIukYArtqectoOoCv3ZF0A7">Video</a></li>
+<li><a href="https://github.com/byterocket/about-solmate">GitHub Repo</a></li>
+</ul>
+<h3 id="approved-by-the-author-">Approved by the Author ✅</h3>
+<p><img src="/post/introduction-to-solmate/t11s-tweet.png" alt="t11s-tweet"></p>
+    
+  </article>
+  <div class="paginator">
+    
+    <a class="link" href="http://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/">← prev</a>
+    
+    
+    <a></a>
+    
+  </div>
+  <div class="comment">
+    
+    
+    
+    
+    
+    
+  </div>
+  
+</main>
+
+    <footer id="footer">
+  <div>
+    <span>© 2019</span> - <span>2022</span>
+  </div>
+
+  <div>
+    <span>Powered by </span>
+    <a class="link" href="https://gohugo.io/">Hugo</a>
+    <span> 🍦 Theme </span>
+    <a class="link" href="https://github.com/queensferryme/hugo-theme-texify">TeXify</a>
+  </div>
+
+  <div class="footnote">
+    <span>Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
+<a class=link href=https://github.com/pmerkleplant>github</a>, or via
+<a class=link href="mailto:me@merkleplant.xyz">email</a> |
+<a class=link href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh target=_blank rel=noopener>CC BY-NC-SA 4.0</a>
+</span>
+  </div>
+</footer>
+
+  </div>
+
+  
+  
+
+  
+  
+
+  
+  
+
+</body>
+
+</html>

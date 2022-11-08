@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  
+  <meta name="author" content="merkleplant">
+
+  
+  
+  <meta name="description" content="This article introduces Ferdinando M. Ametrano’s concept of Hayek Money as
+defined in his paper Hayek Money: The Cryptocurrency Price Stability Solution
+and a follow-up argument that, following this definition, Ampleforth is
+Hayek Money.">
+  
+
+  
+  <link rel="icon" href="http://garden.merkleplant.xyz/favicon.ico">
+
+  
+  
+  <meta name="keywords" content=" hugo  latex  theme ">
+  
+
+  
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"
+  integrity="sha384-KiWOvVjnN8qwAZbuQyWDIbfCLFhLXNETzBQjA/92pIowpC0d2O3nppDGQVgwd2nB" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"
+  integrity="sha384-0fdwu/T/EQMsQlrHCCHoH10pkPLlKA1jL5dFyUOvB3lfeT2540/2g6YgSi2BL14p" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"
+  integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+      throwOnError: false
+    });
+  });
+</script>
+
+
+  
+
+  
+  <meta property="og:title" content="Ampleforth is Hayek Money" />
+<meta property="og:description" content="This article introduces Ferdinando M. Ametrano’s concept of Hayek Money as
+defined in his paper Hayek Money: The Cryptocurrency Price Stability Solution
+and a follow-up argument that, following this definition, Ampleforth is
+Hayek Money." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-05-30T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-05-30T00:00:00+00:00" />
+
+
+
+  
+  <link rel="canonical" href="http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/">
+
+  
+  
+  <meta itemprop="name" content="Ampleforth is Hayek Money">
+<meta itemprop="description" content="This article introduces Ferdinando M. Ametrano’s concept of Hayek Money as
+defined in his paper Hayek Money: The Cryptocurrency Price Stability Solution
+and a follow-up argument that, following this definition, Ampleforth is
+Hayek Money."><meta itemprop="datePublished" content="2022-05-30T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2022-05-30T00:00:00+00:00" />
+<meta itemprop="wordCount" content="1178">
+<meta itemprop="keywords" content="" />
+
+  
+  <link media="screen" rel="stylesheet" href='http://garden.merkleplant.xyz/css/common.css'>
+  <link media="screen" rel="stylesheet" href='http://garden.merkleplant.xyz/css/content.css'>
+
+  
+  
+  <title>Ampleforth is Hayek Money - merkleplant&#39;s garden </title>
+  
+
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Ampleforth is Hayek Money"/>
+<meta name="twitter:description" content="This article introduces Ferdinando M. Ametrano’s concept of Hayek Money as
+defined in his paper Hayek Money: The Cryptocurrency Price Stability Solution
+and a follow-up argument that, following this definition, Ampleforth is
+Hayek Money."/>
+
+
+  
+<link rel="stylesheet" href='http://garden.merkleplant.xyz/css/single.css'>
+
+</head>
+
+<body>
+  <div id="wrapper">
+    <header id="header">
+  <h1>
+    <a href="http://garden.merkleplant.xyz/">merkleplant&#39;s garden </a>
+  </h1>
+
+  <nav>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/">Posts</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/wikis/">Wikis</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="https://merkleplant.xyz">About</a>
+    </span>
+    
+  </nav>
+</header>
+
+    
+<main id="main" class="post">
+  
+  
+  <h1>Ampleforth is Hayek Money</h1>
+  
+  
+  <article class="content">
+    
+    <p>This article introduces Ferdinando M. Ametrano’s concept of <em>Hayek Money</em> as
+defined in his paper <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2425270"><em>Hayek Money: The Cryptocurrency Price Stability Solution</em></a>
+and a follow-up argument that, following this definition, Ampleforth is
+Hayek Money.</p>
+<h2 id="introduction">Introduction</h2>
+<p>The paper starts with the observation that <em>money is a social relation instrument […] to increase cooperation</em>.</p>
+<p>The author argues that money has to fulfill three interdependent functions:</p>
+<ol>
+<li><strong>Medium of exchange</strong> - It can be reliably swapped for something else</li>
+<li><strong>Unit of account</strong> - Other goods, services, and assets are priced in terms
+of money</li>
+<li><strong>Store of value</strong> - It can be reliably saved, stored, and retrieved while
+retaining its usefulness over time</li>
+</ol>
+<p>Despite money’s special role as being the unit the value of other goods are
+measured against, money itself <strong>is a good</strong>.
+As such the <strong>value of money is governed by supply and demand.</strong></p>
+<p>This observation becomes obvious when the inverse of a typical question such as
+“<em>how many apples can I buy with a unit of currency?</em>” is asked, i.e.
+“<em>how many units of currency can I buy with an apple?</em>”.</p>
+<p>Following, the author conducts that “<em>good money should provide stable prices to best perform its role as unit of account</em>”.
+It is argued, that such a money would enable well-informed economic decisions
+by households and firms, following the confidence that the value of one
+currency unit will be stable over time.</p>
+<p>In a price system, the value of goods is measured relative to the value of
+money.
+An increase in the price level of goods and services signals a decrease in the
+value of money - <em>inflation</em>.
+The opposite - <em>deflation</em> - would be a decrease in price levels and,
+therefore, an increase in the value of money.</p>
+<p>However, any such change in the value of a unit of money leads to
+<strong>injustice to debtors or lenders</strong> as the money’s value per unit changes
+during the lifetime of their contracts.</p>
+<p>As the demand for money cannot be controlled, the only possibility to
+ensure price stability is to manage its supply - the <em>monetary policy</em>.</p>
+<h2 id="hayeks-theory-of-concurrent-private-currencies">Hayek’s Theory of Concurrent Private Currencies</h2>
+<p>The Nobel Prize-winning economist Friedrich Hayek analyzed the theory of
+concurrent currencies in his book <a href="https://nakamotoinstitute.org/static/docs/denationalisation.pdf">Denationalisation of Money</a>.</p>
+<p>After stating that competing currencies have never been seriously examined and
+the governmental monopoly of the provision of money not being questioned enough,
+Hayek states that an open competition of private concerns supplying different
+currencies would enable the possibility to control the quantity of money so that
+its value will behave in a desired manner, and
+“<em>that it will, for this reason, retain its acceptability and its value</em>&quot;.</p>
+<p>Hayek imagined a world in which people choose freely which of the concurrently
+circulating currencies they use.</p>
+<p>The success of private currencies sees Hayek in that “<em>there is no reason to doubt that private enterprise, whose business depended on succeeding in the attempt, could keep stable the value of money it issued</em>”.</p>
+<h2 id="hayek-money">Hayek Money</h2>
+<p>Ametrano defines Hayek Money as an elastic supply money that keeps the
+<strong>purchasing power of the currency unit constant to a price index</strong>.
+Furthermore, the supply adjustments need to be performed in a
+<strong>fully automatic and non-discretionary</strong> way with no need for a central
+authority.</p>
+<p>However, adjusting the monetary base can lead to a Cantillon Effect, i.e. the
+supply adjustment could lead to unfair wealth redistributions.
+This leads Ametrano to the idea of adjusting the monetary base by distributing
+the supply delta “<em>pro-quote to every digital wallet</em>”.</p>
+<p>Such an adjustment would have a “<em>neutral impact on the overall wallet wealth, as it does not introduce any arbitrary distortion into the intrinsic value dynamics of the wallet</em>”.</p>
+<p>Currency volatility will then not be discovered by price volatility anymore but
+by supply volatility.</p>
+<p>It should be noted, again, that “<em>supply and demand dictates the value of money relative to other goods: nothing can be done to escape the unavoidable debasement associated with decreasing demand for money</em>”.</p>
+<p>Hayek Money does not eliminate volatility, it shifts volatility from price to supply.</p>
+<h2 id="technicalities-of-hayek-monies">Technicalities of Hayek Monies</h2>
+<p>A reader might ask now how often the monetary base adjustment should be
+performed. After all, supply and demand are constantly changing and, therefore,
+to achieve zero price volatility would mean a constant adjustment to the
+monetary base too.</p>
+<p>Ametrano suggests <em>rebasing</em> the currency amount at least daily.
+Furthermore, he suggests experimenting with some rebasing reaction lag.
+Such a lag could be 30 days, implying that each day only 1/30 of the needed
+money stock adjustment is performed.</p>
+<h2 id="ampleforth---a-hayek-money">Ampleforth - A Hayek Money</h2>
+<p>The Ampleforth <a href="https://docs.ampleforth.org/learn/about-the-ampleforth-protocol">official documentation</a>
+states that
+“<em>the Ampleforth protocol is a set of instructions […] that produces a decentralized unit of account called AMPL</em>”.</p>
+<p>The price index Ampleforth uses to measure the purchasing power is the
+CPI-adjusted 2019 US dollar.
+Once every 24 hours the monetary base of the AMPL token can be adjusted by
+executing a public callable function in Ampleforth’s monetary policy contract.</p>
+<p>This rebase operation calculates the difference between AMPL’s market price and
+price target and performs the resulting supply adjustment atomically,
+and non-dilutive, to every wallet.</p>
+<p>As demanded by Ametrano, the supply adjustments are fully automatic and non-discretionary.
+A supply adjustment has neutral impact on the overall wallet wealth as the
+intrinsic value dynamics of the wallets do not change.</p>
+<p>It is, again, important to mention that the Ampleforth protocol does not
+eliminate volatility. AMPL is <strong>not a stablecoin</strong>.</p>
+<p>However, the AMPL token is quite successful in <strong>keeping the purchasing power of one AMPL stable</strong>,
+as illustrated in AMPL’s market price since inception:</p>
+<p><img src="/post/ampleforth-is-hayek-money/price.avif" alt="price"></p>
+<p>The Ampleforth protocol achieves this by shifting the price volatility to the
+supply volatility.</p>
+<p>Here is a visualization of AMPL’s supply since inception:</p>
+<p><img src="/post/ampleforth-is-hayek-money/supply.avif" alt="supply"></p>
+<h2 id="conclusion">Conclusion</h2>
+<p>This post summarized Ametrano’s idea of Hayek Money and Hayek’s view of why
+concurrent private currencies are favorable.</p>
+<p>Furthermore, this post illustrated that the Ampleforth protocol successfully
+operates a Hayek Money, AMPL. To my knowledge, AMPL is the first Hayek Money
+in existence.</p>
+<h3 id="appendix-a-ampls-monetary-policy-visualized">Appendix A: AMPL’s Monetary Policy Visualized</h3>
+<p>The Ampleforth protocol is a set of smart contracts on Ethereum.
+Smart contracts are programs, mostly written in higher-level programming
+languages, that encode rules that are then uploaded to a blockchain.</p>
+<p>At some point, every program that gets executed is represented in so-called
+<em>bytecode</em>. This bytecode is what the “machine really sees”.</p>
+<p>Anyway, here is a visualization of AMPL’s monetary policy, showing each byte
+contained in the contract:</p>
+<p><img src="/post/ampleforth-is-hayek-money/bytecode.avif" alt="bytecode"></p>
+<p>The bytecode was visualized using <a href="https://twitter.com/danielvf">DanielVF</a>&rsquo;s
+<a href="https://github.com/DanielVF/evm-contract-draw">evm-contract-draw tool</a>.</p>
+<h3 id="appendix-b-some-important-monetary-terms">Appendix B: Some Important Monetary Terms</h3>
+<ul>
+<li><em>debasement</em> - The practice of lowering the intrinsic value while maintaining
+the face value</li>
+<li><em>representative money</em> - Money that represents a claim on a commodity money</li>
+<li><em>fractional receipt money</em> - Money in which the amount of issued
+representative money is greater than the commodity money reserve backing it</li>
+<li><em>seigniorage</em> - Being the profit made by issuing money, especially the
+difference between its face value and its production cost</li>
+<li><em>currency</em> - An instance of money that’s actually used as a medium of exchange</li>
+<li><em>fiat money</em> - Money deriving its value only from government regulation or
+law by defining it’s valid for meeting financial obligations</li>
+</ul>
+    
+  </article>
+  <div class="paginator">
+    
+    <a class="link" href="http://garden.merkleplant.xyz/post/solution-to-hats-finance-ctf-1/">← prev</a>
+    
+    
+    <a class="link" href="http://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/">next →</a>
+    
+  </div>
+  <div class="comment">
+    
+    
+    
+    
+    
+    
+  </div>
+  
+</main>
+
+    <footer id="footer">
+  <div>
+    <span>© 2019</span> - <span>2022</span>
+  </div>
+
+  <div>
+    <span>Powered by </span>
+    <a class="link" href="https://gohugo.io/">Hugo</a>
+    <span> 🍦 Theme </span>
+    <a class="link" href="https://github.com/queensferryme/hugo-theme-texify">TeXify</a>
+  </div>
+
+  <div class="footnote">
+    <span>Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
+<a class=link href=https://github.com/pmerkleplant>github</a>, or via
+<a class=link href="mailto:me@merkleplant.xyz">email</a> |
+<a class=link href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh target=_blank rel=noopener>CC BY-NC-SA 4.0</a>
+</span>
+  </div>
+</footer>
+
+  </div>
+
+  
+  
+
+  
+  
+
+  
+  
+
+</body>
+
+</html>
