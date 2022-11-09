@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on merkleplant&#39;s garden </title>
-    <link>http://garden.merkleplant.xyz/post/</link>
+    <link>https://garden.merkleplant.xyz/post/</link>
     <description>Recent content in Posts on merkleplant&#39;s garden </description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <managingEditor>me@merkleplant.xyz (merkleplant)</managingEditor>
-    <webMaster>me@merkleplant.xyz (merkleplant)</webMaster>
-    <lastBuildDate>Tue, 08 Nov 2022 00:00:00 +0000</lastBuildDate><atom:link href="http://garden.merkleplant.xyz/post/index.xml" rel="self" type="application/rss+xml" />
+    <managingEditor>pascal@merkleplant.xyz (merkleplant)</managingEditor>
+    <webMaster>pascal@merkleplant.xyz (merkleplant)</webMaster>
+    <lastBuildDate>Tue, 08 Nov 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://garden.merkleplant.xyz/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Introduction to solmate</title>
-      <link>http://garden.merkleplant.xyz/post/introduction-to-solmate/</link>
+      <link>https://garden.merkleplant.xyz/post/introduction-to-solmate/</link>
       <pubDate>Tue, 08 Nov 2022 00:00:00 +0000</pubDate>
-      <author>me@merkleplant.xyz (merkleplant)</author>
-      <guid>http://garden.merkleplant.xyz/post/introduction-to-solmate/</guid>
+      <author>pascal@merkleplant.xyz (merkleplant)</author>
+      <guid>https://garden.merkleplant.xyz/post/introduction-to-solmate/</guid>
       
       <description>&lt;p&gt;The &lt;code&gt;solmate&lt;/code&gt; contracts from &lt;a href=&#34;https://twitter.com/transmissions11&#34;&gt;t11s&lt;/a&gt; are
 &amp;ldquo;&lt;em&gt;not designed with user safety in mind&lt;/em&gt;&amp;rdquo;. Implicit invariants are expected
@@ -32,16 +32,16 @@ presentation is for you.&lt;/p&gt;
 &lt;li&gt;&lt;a href=&#34;https://github.com/byterocket/about-solmate&#34;&gt;GitHub Repo&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;approved-by-the-author-&#34;&gt;Approved by the Author ✅&lt;/h3&gt;
-&lt;p&gt;&lt;img src=&#34;http://garden.merkleplant.xyz/post/introduction-to-solmate/t11s-tweet.png&#34; alt=&#34;t11s-tweet&#34;&gt;&lt;/p&gt;</description>
+&lt;p&gt;&lt;img src=&#34;https://garden.merkleplant.xyz/post/introduction-to-solmate/t11s-tweet.png&#34; alt=&#34;t11s-tweet&#34;&gt;&lt;/p&gt;</description>
       
     </item>
     
     <item>
       <title>Entering the Huff Ecosystem</title>
-      <link>http://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/</link>
+      <link>https://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/</link>
       <pubDate>Mon, 04 Jul 2022 00:00:00 +0000</pubDate>
-      <author>me@merkleplant.xyz (merkleplant)</author>
-      <guid>http://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/</guid>
+      <author>pascal@merkleplant.xyz (merkleplant)</author>
+      <guid>https://garden.merkleplant.xyz/post/entering-the-huff-ecosystem/</guid>
       
       <description>&lt;p&gt;This article introduces the evolving &lt;a href=&#34;https://huff.sh/&#34;&gt;Huff&lt;/a&gt; language and
 ecosystem by developing a non-trivial contract, an &lt;code&gt;Ownable&lt;/code&gt; contract with a
@@ -711,10 +711,10 @@ we produced beforehand. The next two elements are the arguments.&lt;/p&gt;
     
     <item>
       <title>Ampleforth is Hayek Money</title>
-      <link>http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/</link>
+      <link>https://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/</link>
       <pubDate>Mon, 30 May 2022 00:00:00 +0000</pubDate>
-      <author>me@merkleplant.xyz (merkleplant)</author>
-      <guid>http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/</guid>
+      <author>pascal@merkleplant.xyz (merkleplant)</author>
+      <guid>https://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/</guid>
       
       <description>&lt;p&gt;This article introduces Ferdinando M. Ametrano’s concept of &lt;em&gt;Hayek Money&lt;/em&gt; as
 defined in his paper &lt;a href=&#34;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2425270&#34;&gt;&lt;em&gt;Hayek Money: The Cryptocurrency Price Stability Solution&lt;/em&gt;&lt;/a&gt;
@@ -805,11 +805,11 @@ intrinsic value dynamics of the wallets do not change.&lt;/p&gt;
 eliminate volatility. AMPL is &lt;strong&gt;not a stablecoin&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;However, the AMPL token is quite successful in &lt;strong&gt;keeping the purchasing power of one AMPL stable&lt;/strong&gt;,
 as illustrated in AMPL’s market price since inception:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/price.avif&#34; alt=&#34;price&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/price.avif&#34; alt=&#34;price&#34;&gt;&lt;/p&gt;
 &lt;p&gt;The Ampleforth protocol achieves this by shifting the price volatility to the
 supply volatility.&lt;/p&gt;
 &lt;p&gt;Here is a visualization of AMPL’s supply since inception:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/supply.avif&#34; alt=&#34;supply&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/supply.avif&#34; alt=&#34;supply&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
 &lt;p&gt;This post summarized Ametrano’s idea of Hayek Money and Hayek’s view of why
 concurrent private currencies are favorable.&lt;/p&gt;
@@ -824,7 +824,7 @@ languages, that encode rules that are then uploaded to a blockchain.&lt;/p&gt;
 &lt;em&gt;bytecode&lt;/em&gt;. This bytecode is what the “machine really sees”.&lt;/p&gt;
 &lt;p&gt;Anyway, here is a visualization of AMPL’s monetary policy, showing each byte
 contained in the contract:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;http://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/bytecode.avif&#34; alt=&#34;bytecode&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/bytecode.avif&#34; alt=&#34;bytecode&#34;&gt;&lt;/p&gt;
 &lt;p&gt;The bytecode was visualized using &lt;a href=&#34;https://twitter.com/danielvf&#34;&gt;DanielVF&lt;/a&gt;&amp;rsquo;s
 &lt;a href=&#34;https://github.com/DanielVF/evm-contract-draw&#34;&gt;evm-contract-draw tool&lt;/a&gt;.&lt;/p&gt;
 &lt;h3 id=&#34;appendix-b-some-important-monetary-terms&#34;&gt;Appendix B: Some Important Monetary Terms&lt;/h3&gt;
@@ -845,10 +845,10 @@ law by defining it’s valid for meeting financial obligations&lt;/li&gt;
     
     <item>
       <title>Solution to Hats.finance CTF #1</title>
-      <link>http://garden.merkleplant.xyz/post/solution-to-hats-finance-ctf-1/</link>
+      <link>https://garden.merkleplant.xyz/post/solution-to-hats-finance-ctf-1/</link>
       <pubDate>Mon, 16 May 2022 00:00:00 +0000</pubDate>
-      <author>me@merkleplant.xyz (merkleplant)</author>
-      <guid>http://garden.merkleplant.xyz/post/solution-to-hats-finance-ctf-1/</guid>
+      <author>pascal@merkleplant.xyz (merkleplant)</author>
+      <guid>https://garden.merkleplant.xyz/post/solution-to-hats-finance-ctf-1/</guid>
       
       <description>&lt;p&gt;&lt;a href=&#34;https://hats.finance/&#34;&gt;Hats.finance&lt;/a&gt; is a decentralized smart bug bounty marketplace that intends to regularly run CTF competitions.&lt;/p&gt;
 &lt;p&gt;This article provides a quick walkthrough of hats’ first challenge and the solution I came up with.&lt;/p&gt;

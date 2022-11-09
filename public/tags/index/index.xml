@@ -2,18 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>index on merkleplant&#39;s garden </title>
-    <link>http://garden.merkleplant.xyz/tags/index/</link>
+    <link>https://garden.merkleplant.xyz/tags/index/</link>
     <description>Recent content in index on merkleplant&#39;s garden </description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <managingEditor>me@merkleplant.xyz (merkleplant)</managingEditor>
-    <webMaster>me@merkleplant.xyz (merkleplant)</webMaster><atom:link href="http://garden.merkleplant.xyz/tags/index/index.xml" rel="self" type="application/rss+xml" />
+    <managingEditor>pascal@merkleplant.xyz (merkleplant)</managingEditor>
+    <webMaster>pascal@merkleplant.xyz (merkleplant)</webMaster><atom:link href="https://garden.merkleplant.xyz/tags/index/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Posts</title>
-      <link>http://garden.merkleplant.xyz/post/</link>
+      <link>https://garden.merkleplant.xyz/post/</link>
       <pubDate>Tue, 08 Nov 2022 00:00:00 +0000</pubDate>
-      <author>me@merkleplant.xyz (merkleplant)</author>
-      <guid>http://garden.merkleplant.xyz/post/</guid>
+      <author>pascal@merkleplant.xyz (merkleplant)</author>
+      <guid>https://garden.merkleplant.xyz/post/</guid>
       
       <description></description>
       

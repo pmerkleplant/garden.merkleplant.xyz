@@ -2,11 +2,11 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Series on merkleplant&#39;s garden </title>
-    <link>http://garden.merkleplant.xyz/series/</link>
+    <link>https://garden.merkleplant.xyz/series/</link>
     <description>Recent content in Series on merkleplant&#39;s garden </description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <managingEditor>me@merkleplant.xyz (merkleplant)</managingEditor>
-    <webMaster>me@merkleplant.xyz (merkleplant)</webMaster><atom:link href="http://garden.merkleplant.xyz/series/index.xml" rel="self" type="application/rss+xml" />
+    <managingEditor>pascal@merkleplant.xyz (merkleplant)</managingEditor>
+    <webMaster>pascal@merkleplant.xyz (merkleplant)</webMaster><atom:link href="https://garden.merkleplant.xyz/series/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>
