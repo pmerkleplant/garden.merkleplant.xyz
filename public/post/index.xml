@@ -24,7 +24,7 @@ their footguns, and cross-check them with the OpenZeppelin library.&lt;/p&gt;
 &lt;h2 id=&#34;evm-expeditions-at-byterockethttpsbyterocketcom&#34;&gt;EVM Expeditions at &lt;a href=&#34;https://byterocket.com&#34;&gt;byterocket&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Recently, we at &lt;a href=&#34;https://byterocket.com&#34;&gt;byterocket&lt;/a&gt; started to share internal
 learning sessions under the term &lt;a href=&#34;https://www.youtube.com/playlist?list=PLxO4n4c2l1TIukYArtqectoOoCv3ZF0A7&#34;&gt;&lt;em&gt;EVM Expeditions&lt;/em&gt;&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;If you ever wanted to konw how to create an overflow in &lt;code&gt;solmate&lt;/code&gt;&amp;rsquo;s ERC20 token,
+&lt;p&gt;If you ever wanted to know how to create an overflow in &lt;code&gt;solmate&lt;/code&gt;&amp;rsquo;s ERC20 token,
 or finally want to understand the assembly in the &lt;code&gt;SafeTransferLib&lt;/code&gt;, this
 presentation is for you.&lt;/p&gt;
 &lt;ul&gt;
@@ -519,7 +519,7 @@ not have.&lt;/p&gt;
 &lt;p&gt;The next elements are the topics, starting from 1 up to 3. Heading to the
 Solidity docs indicates the first topic is the event signature, i.e. the hashes
 we produced beforehand. The next two elements are the arguments.&lt;/p&gt;
-&lt;h2 id=&#34;putting-all-this-together&#34;&gt;Putting all this together:&lt;/h2&gt;
+&lt;p&gt;Putting all this together:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// cast keccak &amp;#34;NewOwner(address,address)&amp;#34;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;#define constant EVENT_NEW_OWNER
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0x70aea8d848e8a90fb7661b227dc522eb6395c3dac71b63cb59edd5c9899b2364&lt;/span&gt;
