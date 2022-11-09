@@ -50,6 +50,7 @@ tags = "tags"
 
 [params]
 description = "merkleplant's garden"
+favicon = "favicon.ico"
 footnote = """
 Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
 <a class=link href=https://github.com/pmerkleplant>github</a>, or via
