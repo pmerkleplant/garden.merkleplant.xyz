@@ -18,7 +18,7 @@ their footguns, and cross-check them with the OpenZeppelin library.
 Recently, we at [byterocket](https://byterocket.com) started to share internal
 learning sessions under the term [_EVM Expeditions_](https://www.youtube.com/playlist?list=PLxO4n4c2l1TIukYArtqectoOoCv3ZF0A7).
 
-If you ever wanted to konw how to create an overflow in `solmate`'s ERC20 token,
+If you ever wanted to know how to create an overflow in `solmate`'s ERC20 token,
 or finally want to understand the assembly in the `SafeTransferLib`, this
 presentation is for you.
 

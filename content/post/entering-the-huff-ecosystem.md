@@ -639,7 +639,7 @@ The next elements are the topics, starting from 1 up to 3. Heading to the
 Solidity docs indicates the first topic is the event signature, i.e. the hashes
 we produced beforehand. The next two elements are the arguments.
 
-## Putting all this together:
+Putting all this together:
 
 ```c
 // cast keccak "NewOwner(address,address)"
