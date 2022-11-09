@@ -2,7 +2,7 @@
 # BUILT-IN CONFIGURATION OPTOINS                  #
 # https://gohugo.io/getting-started/configuration #
 ###################################################
-baseURL = 'http://garden.merkleplant.xyz/'
+baseURL = 'https://garden.merkleplant.xyz/'
 title = "merkleplant's garden "
 languageCode = 'en-us'
 
@@ -10,7 +10,7 @@ paginate = 5                              # number of posts each page
 theme = "hugo-theme-texify"               # theme directory name
 
 [author]
-email = "me@merkleplant.xyz"
+email = "pascal@merkleplant.xyz"
 name = "merkleplant"
 
 # https://gohugo.io/getting-started/configuration-markup
@@ -50,7 +50,6 @@ tags = "tags"
 
 [params]
 description = "merkleplant's garden"
-favicon = "favicon.ico"
 footnote = """
 Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
 <a class=link href=https://github.com/pmerkleplant>github</a>, or via
