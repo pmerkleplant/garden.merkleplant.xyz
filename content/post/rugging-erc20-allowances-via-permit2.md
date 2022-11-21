@@ -4,7 +4,7 @@ title = "Rugging ERC20 Allowances via Permit2"
 date = "2022-11-21"
 +++
 
-On November the 17th Uniswap released a new generation token approval contract - [`Permit2`](https://github.com/Uniswap/permit2).
+On November 17th Uniswap released a new generation token approval contract - [`Permit2`](https://github.com/Uniswap/permit2).
 
 `Permit2` is an exciting new piece of infrastructure enabling token approval
 management independent of the ERC20 token implementation itself.
@@ -21,10 +21,10 @@ such a rug vector before and wanted to share my findings.
 
 Via `Permit2` it is possible to manage token approvals outside of the ERC20
 token itself. The contract supports more configurations for approvals, such
-as time based approvals, then a default ERC20 token.
+as time-based approvals, than a default ERC20 token.
 
-In order for a user to enable the `Permit2` contract to manage its allowances,
-the contract needs to have approval to spend the user's tokens.
+For a user to enable the `Permit2` contract to manage its allowances,
+the contract needs to have the approval to spend the user's tokens.
 
 A user can either approve infinite tokens to the contract using `type(uint).max`
 (interpreted in most ERC20 implementations as being infinite) or some finite
@@ -41,8 +41,8 @@ library's `ERC20` implementation and `SafeTransferLib`. As you probably know,
 the ERC20 standard itself has some weaknesses concerning, among others, the
 transfer of tokens.
 
-In order to not having to handle ERC20's transfer issues by hand, most
-project nowadays use some "`SafeERC20TransferLib`", with the most popular ones
+To not have to handle ERC20's transfer issues by hand, most
+projects nowadays use some "`SafeERC20TransferLib`", with the most popular ones
 being the from [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/utils/SafeERC20.sol)
 and [`solmate`](https://github.com/transmissions11/solmate/blob/main/src/utils/SafeTransferLib.sol).
 
@@ -72,24 +72,24 @@ Via the combination of `selfdestruct` and deterministic contract addresses
 via `create2` there exists a mechanism to destroy and redeploy tokens again to
 the same address.
 
-Last but no least, using already well known [Proxy](https://hackmd.io/@devtooligan/yAcademyGuideToProxies)
+Last but not least, using already well-known [Proxy](https://hackmd.io/@devtooligan/yAcademyGuideToProxies)
 patterns, i.e. separating a contract's storage from its implementation, it is
 possible to keep the token's storage during a _destruct-and-redeploy_ of a token.
 
 Digesting all these puzzle pieces leads to the possibility for a token creator
 to approve token allowances to users via `Permit2`, just to rug these allowances
 from the user again by destroying the token before a user's spending
-transaction, while being able to redeploy the token to the same address again
+transaction while being able to redeploy the token to the same address again
 afterwards.
 
 Furthermore, having private mempools for deterministic transaction ordering and
-proxy patterns for separating implementation and storage available, this leads
+proxy patterns for separating implementation and storage available, leads
 to a new, and for unsophisticated users laborious recognizable, rug vector.
 
 
 ## Proof-of-Concept
 
-Below is a PoC implementation of the allowance-rug a token owner (or any
+Below is a PoC implementation of the allowance rug a token owner (or any
 address being able to destroy the token and knowing the `create2` salt) can carry
 out via the combination of `selfdestruct`-able tokens and `Permit2`.
 

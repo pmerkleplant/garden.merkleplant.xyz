@@ -11,7 +11,7 @@
 
   
   
-  <meta name="description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+  <meta name="description" content="On November 17th Uniswap released a new generation token approval contract - Permit2.
 Permit2 is an exciting new piece of infrastructure enabling token approval
 management independent of the ERC20 token implementation itself.
 However, it also enables a new rug vector to steal allowances via sandwich
@@ -55,7 +55,7 @@ selfdestruct-ing and redeploying the token.">
 
   
   <meta property="og:title" content="Rugging ERC20 Allowances via Permit2" />
-<meta property="og:description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+<meta property="og:description" content="On November 17th Uniswap released a new generation token approval contract - Permit2.
 Permit2 is an exciting new piece of infrastructure enabling token approval
 management independent of the ERC20 token implementation itself.
 However, it also enables a new rug vector to steal allowances via sandwich
@@ -73,13 +73,13 @@ selfdestruct-ing and redeploying the token." />
   
   
   <meta itemprop="name" content="Rugging ERC20 Allowances via Permit2">
-<meta itemprop="description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+<meta itemprop="description" content="On November 17th Uniswap released a new generation token approval contract - Permit2.
 Permit2 is an exciting new piece of infrastructure enabling token approval
 management independent of the ERC20 token implementation itself.
 However, it also enables a new rug vector to steal allowances via sandwich
 selfdestruct-ing and redeploying the token."><meta itemprop="datePublished" content="2022-11-21T00:00:00+00:00" />
 <meta itemprop="dateModified" content="2022-11-21T00:00:00+00:00" />
-<meta itemprop="wordCount" content="1011">
+<meta itemprop="wordCount" content="1005">
 <meta itemprop="keywords" content="" />
 
   
@@ -94,7 +94,7 @@ selfdestruct-ing and redeploying the token."><meta itemprop="datePublished" cont
   
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Rugging ERC20 Allowances via Permit2"/>
-<meta name="twitter:description" content="On November the 17th Uniswap released a new generation token approval contract - Permit2.
+<meta name="twitter:description" content="On November 17th Uniswap released a new generation token approval contract - Permit2.
 Permit2 is an exciting new piece of infrastructure enabling token approval
 management independent of the ERC20 token implementation itself.
 However, it also enables a new rug vector to steal allowances via sandwich
@@ -139,7 +139,7 @@ selfdestruct-ing and redeploying the token."/>
   
   <article class="content">
     
-    <p>On November the 17th Uniswap released a new generation token approval contract - <a href="https://github.com/Uniswap/permit2"><code>Permit2</code></a>.</p>
+    <p>On November 17th Uniswap released a new generation token approval contract - <a href="https://github.com/Uniswap/permit2"><code>Permit2</code></a>.</p>
 <p><code>Permit2</code> is an exciting new piece of infrastructure enabling token approval
 management independent of the ERC20 token implementation itself.</p>
 <p>However, it also enables a new rug vector to steal allowances via sandwich
@@ -150,9 +150,9 @@ such a rug vector before and wanted to share my findings.</p>
 <h2 id="introduction-to-permit2">Introduction to <code>Permit2</code></h2>
 <p>Via <code>Permit2</code> it is possible to manage token approvals outside of the ERC20
 token itself. The contract supports more configurations for approvals, such
-as time based approvals, then a default ERC20 token.</p>
-<p>In order for a user to enable the <code>Permit2</code> contract to manage its allowances,
-the contract needs to have approval to spend the user&rsquo;s tokens.</p>
+as time-based approvals, than a default ERC20 token.</p>
+<p>For a user to enable the <code>Permit2</code> contract to manage its allowances,
+the contract needs to have the approval to spend the user&rsquo;s tokens.</p>
 <p>A user can either approve infinite tokens to the contract using <code>type(uint).max</code>
 (interpreted in most ERC20 implementations as being infinite) or some finite
 amount.</p>
@@ -163,8 +163,8 @@ its allowance back to zero.</p>
 library&rsquo;s <code>ERC20</code> implementation and <code>SafeTransferLib</code>. As you probably know,
 the ERC20 standard itself has some weaknesses concerning, among others, the
 transfer of tokens.</p>
-<p>In order to not having to handle ERC20&rsquo;s transfer issues by hand, most
-project nowadays use some &ldquo;<code>SafeERC20TransferLib</code>&rdquo;, with the most popular ones
+<p>To not have to handle ERC20&rsquo;s transfer issues by hand, most
+projects nowadays use some &ldquo;<code>SafeERC20TransferLib</code>&rdquo;, with the most popular ones
 being the from <a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/utils/SafeERC20.sol">OpenZeppelin</a>
 and <a href="https://github.com/transmissions11/solmate/blob/main/src/utils/SafeTransferLib.sol"><code>solmate</code></a>.</p>
 <p>One major difference between the two libraries is that OpenZeppelin checks
@@ -186,19 +186,19 @@ existing.</p>
 <p>Via the combination of <code>selfdestruct</code> and deterministic contract addresses
 via <code>create2</code> there exists a mechanism to destroy and redeploy tokens again to
 the same address.</p>
-<p>Last but no least, using already well known <a href="https://hackmd.io/@devtooligan/yAcademyGuideToProxies">Proxy</a>
+<p>Last but not least, using already well-known <a href="https://hackmd.io/@devtooligan/yAcademyGuideToProxies">Proxy</a>
 patterns, i.e. separating a contract&rsquo;s storage from its implementation, it is
 possible to keep the token&rsquo;s storage during a <em>destruct-and-redeploy</em> of a token.</p>
 <p>Digesting all these puzzle pieces leads to the possibility for a token creator
 to approve token allowances to users via <code>Permit2</code>, just to rug these allowances
 from the user again by destroying the token before a user&rsquo;s spending
-transaction, while being able to redeploy the token to the same address again
+transaction while being able to redeploy the token to the same address again
 afterwards.</p>
 <p>Furthermore, having private mempools for deterministic transaction ordering and
-proxy patterns for separating implementation and storage available, this leads
+proxy patterns for separating implementation and storage available, leads
 to a new, and for unsophisticated users laborious recognizable, rug vector.</p>
 <h2 id="proof-of-concept">Proof-of-Concept</h2>
-<p>Below is a PoC implementation of the allowance-rug a token owner (or any
+<p>Below is a PoC implementation of the allowance rug a token owner (or any
 address being able to destroy the token and knowing the <code>create2</code> salt) can carry
 out via the combination of <code>selfdestruct</code>-able tokens and <code>Permit2</code>.</p>
 <p>To run the code, clone <a href="https://github.com/pmerkleplant/Permit2-AllowanceRug">this repo</a>
