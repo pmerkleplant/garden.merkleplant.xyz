@@ -5,6 +5,7 @@ date = "2022-12-05"
 +++
 
 In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
+
 Using [foundry](https://getfoundry.sh/)’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
 token, and afterwards, check whether a set of properties still hold.
 <!--more-->

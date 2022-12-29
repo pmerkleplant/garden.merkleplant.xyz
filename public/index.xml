@@ -16,8 +16,8 @@
       <author>pascal@merkleplant.xyz (merkleplant)</author>
       <guid>https://garden.merkleplant.xyz/post/property-based-testing-ampleforth/</guid>
       
-      <description>&lt;p&gt;In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
-Using &lt;a href=&#34;https://getfoundry.sh/&#34;&gt;foundry&lt;/a&gt;’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
+      <description>&lt;p&gt;In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.&lt;/p&gt;
+&lt;p&gt;Using &lt;a href=&#34;https://getfoundry.sh/&#34;&gt;foundry&lt;/a&gt;’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
 token, and afterwards, check whether a set of properties still hold.&lt;/p&gt;
 &lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;Property-based testing describes a testing technique in which not state transitions are tested,
