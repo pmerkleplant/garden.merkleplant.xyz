@@ -3,10 +3,13 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://garden.merkleplant.xyz/</loc>
-    <lastmod>2022-11-21T00:00:00+00:00</lastmod>
+    <lastmod>2022-12-05T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://garden.merkleplant.xyz/post/</loc>
-    <lastmod>2022-11-21T00:00:00+00:00</lastmod>
+    <lastmod>2022-12-05T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://garden.merkleplant.xyz/post/property-based-testing-ampleforth/</loc>
+    <lastmod>2022-12-05T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://garden.merkleplant.xyz/post/rugging-erc20-allowances-via-permit2/</loc>
     <lastmod>2022-11-21T00:00:00+00:00</lastmod>

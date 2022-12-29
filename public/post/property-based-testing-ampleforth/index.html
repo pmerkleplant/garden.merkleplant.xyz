@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  
+  <meta name="author" content="merkleplant">
+
+  
+  
+  <meta name="description" content="In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
+Using foundry’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
+token, and afterwards, check whether a set of properties still hold.">
+  
+
+  
+  <link rel="icon" href="https://garden.merkleplant.xyz/favicon.ico">
+
+  
+  
+  <meta name="keywords" content=" hugo  latex  theme ">
+  
+
+  
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"
+  integrity="sha384-KiWOvVjnN8qwAZbuQyWDIbfCLFhLXNETzBQjA/92pIowpC0d2O3nppDGQVgwd2nB" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"
+  integrity="sha384-0fdwu/T/EQMsQlrHCCHoH10pkPLlKA1jL5dFyUOvB3lfeT2540/2g6YgSi2BL14p" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"
+  integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+      throwOnError: false
+    });
+  });
+</script>
+
+
+  
+
+  
+  <meta property="og:title" content="Property-based Testing Ampleforth" />
+<meta property="og:description" content="In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
+Using foundry’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
+token, and afterwards, check whether a set of properties still hold." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://garden.merkleplant.xyz/post/property-based-testing-ampleforth/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-12-05T00:00:00+00:00" />
+<meta property="article:modified_time" content="2022-12-05T00:00:00+00:00" />
+
+
+  
+  <link rel="canonical" href="https://garden.merkleplant.xyz/post/property-based-testing-ampleforth/">
+
+  
+  
+  <meta itemprop="name" content="Property-based Testing Ampleforth">
+<meta itemprop="description" content="In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
+Using foundry’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
+token, and afterwards, check whether a set of properties still hold."><meta itemprop="datePublished" content="2022-12-05T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2022-12-05T00:00:00+00:00" />
+<meta itemprop="wordCount" content="2162">
+<meta itemprop="keywords" content="" />
+
+  
+  <link media="screen" rel="stylesheet" href='https://garden.merkleplant.xyz/css/common.css'>
+  <link media="screen" rel="stylesheet" href='https://garden.merkleplant.xyz/css/content.css'>
+
+  
+  
+  <title>Property-based Testing Ampleforth - merkleplant&#39;s garden </title>
+  
+
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Property-based Testing Ampleforth"/>
+<meta name="twitter:description" content="In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
+Using foundry’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
+token, and afterwards, check whether a set of properties still hold."/>
+
+
+  
+<link rel="stylesheet" href='https://garden.merkleplant.xyz/css/single.css'>
+
+</head>
+
+<body>
+  <div id="wrapper">
+    <header id="header">
+  <h1>
+    <a href="https://garden.merkleplant.xyz/">merkleplant&#39;s garden </a>
+  </h1>
+
+  <nav>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/">Posts</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="/wikis/">Wikis</a>
+    </span>
+    
+    <span class="nav-bar-item">
+      <a class="link" href="https://merkleplant.xyz">About</a>
+    </span>
+    
+  </nav>
+</header>
+
+    
+<main id="main" class="post">
+  
+  
+  <h1>Property-based Testing Ampleforth</h1>
+  
+  
+  <article class="content">
+    
+    <p>In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
+Using <a href="https://getfoundry.sh/">foundry</a>’s fuzzing capabilities we first apply a set of pseudo-random input to the AMPL
+token, and afterwards, check whether a set of properties still hold.</p>
+<h2 id="introduction">Introduction</h2>
+<p>Property-based testing describes a testing technique in which not state transitions are tested,
+but rather properties of states itself.</p>
+<p>Via foundry&rsquo;s fuzzing capabilities we can receive pseudo-random input into our tests, enabling us to execute randomized
+state transitions to the AMPL contract.</p>
+<h3 id="acknowledgment">Acknowledgment</h3>
+<p>I want to thank <a href="https://a16zcrypto.com/">a16z</a> for publishing their <a href="https://github.com/a16z/erc4626-tests">ERC-4626 property tests</a>,
+which I used as inspiration when creating this test suite.</p>
+<h2 id="ampleforth">Ampleforth</h2>
+<p>In essence, the <a href="https://www.ampleforth.org/">Ampleforth protocol</a> uses the AMPL token to offer an inflation-resistant
+unit of account.</p>
+<p>See, for instance, my article <a href="https://garden.merkleplant.xyz/post/ampleforth-is-hayek-money/">Ampleforth is Hayek Money</a>
+or this <a href="https://merkleplant.notion.site/Ampleforth-Wiki-32d7e4b2f7474e4fb8ea48cb0ecba092">collection of materials</a>
+for further information on AMPLs monetary qualities.</p>
+<p>Going more into the technical details, AMPL is a non-dilutive rebasing token.
+The implementation derives an external, elastic user balance by dividing a fixed internal user balance with a
+conversion rate (also called <em>scalar</em> or <em>rebase factor</em>).</p>
+<p>Through the rebase operation, which updates the conversion rate, the protocol mutates all (external) user balances in
+constant time. It is also important to note that this makes a rebase non-dilutive as each user balance is effected
+equally through the updated conversion rate.</p>
+<p>We will only discuss AMPL&rsquo;s internal operations in as much detail as is required for this post.
+I do, however, urge you to review the remaining codebase which, in my humble opinion, serves as an illustration of a
+simple and robust smart contract system.</p>
+<h2 id="setting-up-the-project">Setting up the Project</h2>
+<blockquote>
+<p>Note that you can find the whole project <a href="https://github.com/pmerkleplant/ampleforth-property-tests">here</a>.</p>
+</blockquote>
+<p>As always, first set up a new foundry project via <code>forge init</code>. Afterwards, install Ampleforth&rsquo;s contracts as dependency
+via <code>forge install https://github.com/ampleforth/ampleforth-contracts</code>.</p>
+<p>After deleting the default contracts, create two files inside the <code>test/</code> directory - <code>AMPL.p.sol</code> and <code>AMPL.t.sol</code>.</p>
+<p>Copy the following contract into the <code>AMPL.p.sol</code> file:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// SPDX-License-Identifier: GPL-3.0-or-later
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">pragma solidity</span> <span style="color:#ce5c00;font-weight:bold">^</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">7</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">6</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#8f5902;font-style:italic">// Ampleforth is based on version 0.7.6.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#4e9a06">&#34;forge-std/Test.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// The token&#39;s name was originally UFragments. Let&#39;s rename it.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">UFragments</span> <span style="color:#204a87;font-weight:bold">as</span> <span style="color:#000">AMPL</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;ampleforth-contracts/UFragments.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">abstract</span> <span style="color:#204a87;font-weight:bold">contract</span> <span style="color:#000">AMPLProp</span> <span style="color:#204a87;font-weight:bold">is</span> <span style="color:#000">Test</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">AMPL</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#8f5902;font-style:italic">// The AMPL token instance we are going to test.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Constants copied from AMPL.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#204a87;font-weight:bold">constant</span> <span style="color:#000">MAX_SUPPLY</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87">type</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">uint128</span><span style="color:#000;font-weight:bold">).</span><span style="color:#204a87">max</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Inside the <code>AMPLProp</code> contract we are going to define our properties and test whether they are true for the declared
+<code>ampl</code> token instance.</p>
+<h2 id="properties">Properties</h2>
+<h3 id="total-supply">Total Supply</h3>
+<p>The initial properties we test for is that the total supply should not be 0 or greater than <code>MAX_SUPPLY</code>.</p>
+<p>In Solidity:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev The total supply never exceeds the defined max supply.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_TotalSupplyNeverExceedsMaxSupply</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">assertTrue</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">totalSupply</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#ce5c00;font-weight:bold">&lt;=</span> <span style="color:#000">MAX_SUPPLY</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev The total supply is never zero.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_TotalSupplyNeverZero</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">assertTrue</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">totalSupply</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Next, a property of balances in regard to the total supply can be formalized.
+While the total supply equals the sum of all balances in the majority of ERC20 implementations, a rebase token&rsquo;s
+balance is computed by dividing an internal balance with a rebase factor, and due to integer divisions having rounding
+errors if the result is a floating number, the <code>AMPL</code> contract <a href="https://github.com/ampleforth/ampleforth-contracts/blob/ab5abe27fc5b107d9acacd9199809760f35a2ac7/contracts/UFragments.sol#L35-L37">states</a> the following:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">We</span> <span style="color:#204a87;font-weight:bold">do</span> <span style="color:#000">not</span> <span style="color:#000">guarantee</span> <span style="color:#000">that</span> <span style="color:#000">the</span> <span style="color:#000">sum</span> <span style="color:#000">of</span> <span style="color:#000">all</span> <span style="color:#000">balances</span> <span style="color:#000">equals</span> <span style="color:#000">the</span> <span style="color:#000">result</span> <span style="color:#000">of</span> <span style="color:#000">calling</span> <span style="color:#000">totalSupply</span><span style="color:#000;font-weight:bold">().</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">This</span> <span style="color:#000">is</span> <span style="color:#000">because</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">any</span> <span style="color:#000">conversion</span> <span style="color:#000">function</span> <span style="color:#a40000">&#39;</span><span style="color:#000">f</span><span style="color:#000;font-weight:bold">()</span><span style="color:#a40000">&#39;</span> <span style="color:#000">that</span> <span style="color:#000">has</span> <span style="color:#000">non</span><span style="color:#ce5c00;font-weight:bold">-</span><span style="color:#000">zero</span> <span style="color:#000">rounding</span> <span style="color:#000">error</span><span style="color:#000;font-weight:bold">,</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">f</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">x0</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#ce5c00;font-weight:bold">+</span> <span style="color:#000">f</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">x1</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#ce5c00;font-weight:bold">+</span> <span style="color:#000;font-weight:bold">...</span> <span style="color:#ce5c00;font-weight:bold">+</span> <span style="color:#000">f</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">xn</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000">is</span> <span style="color:#000">not</span> <span style="color:#000">always</span> <span style="color:#000">equal</span> <span style="color:#000">to</span> <span style="color:#000">f</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">x0</span> <span style="color:#ce5c00;font-weight:bold">+</span> <span style="color:#000">x1</span> <span style="color:#ce5c00;font-weight:bold">+</span> <span style="color:#000;font-weight:bold">...</span> <span style="color:#000">xn</span><span style="color:#000;font-weight:bold">).</span>
+</span></span></code></pre></div><p>Therefore, our property dilutes to:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev The sum of all balances never exceeds the total supply.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_SumOfAllBalancesNeverExceedsTotalSupply</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Note that the owner and the set of users are the only addresses that may have a non-zero balance.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">sum</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">sum</span> <span style="color:#ce5c00;font-weight:bold">+=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">assertTrue</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">sum</span> <span style="color:#ce5c00;font-weight:bold">&lt;=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">totalSupply</span><span style="color:#000;font-weight:bold">());</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><h3 id="rebase">Rebase</h3>
+<p>As mentioned already, rebases are non-dilutive operations. Therefore, the internal balances prior to and following a
+rebase must be equal. (Note that the internal balance in AMPL is called <code>gons</code>)</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev A rebase operation is non-dilutive, i.e. does not change the wallet wealth distribution.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_RebaseIsNonDilutive</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">int</span> <span style="color:#000">supplyDelta</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">uint</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">gonBalancesBeforeRebase</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">new</span> <span style="color:#204a87;font-weight:bold">uint</span><span style="color:#000;font-weight:bold">[](</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">gonBalancesBeforeRebase</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">scaledBalanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">try</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">rebase</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">supplyDelta</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{}</span> <span style="color:#204a87;font-weight:bold">catch</span> <span style="color:#000;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">scaledBalanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]),</span> <span style="color:#000">gonBalancesBeforeRebase</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>We can also check that the external balances are always computed correctly by computing the conversion rate ourself
+and applying it to the internal balances.</p>
+<p>The <code>scaledTotalSupply() returns (uint)</code> function returns the total supply of the fixed, internal balances.
+Dividing this supply by the current <code>totalSupply() returns (uint)</code> gives us the current rebase conversion rate.</p>
+<p>Following, dividing a user&rsquo;s internal balance with our self-computed conversion rate should equal the user&rsquo;s external
+balance.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev The gon-AMPL conversion rate is the (fixed) scaled total supply divided by the (elastic) total supply.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_ConversionRate</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">gonsPerAMPL</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">scaledTotalSupply</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#ce5c00;font-weight:bold">/</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">totalSupply</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">gonBalance</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">scaledBalanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">amplBalance</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">gonBalance</span> <span style="color:#ce5c00;font-weight:bold">/</span> <span style="color:#000">gonsPerAMPL</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">amplBalance</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><h3 id="transfer">Transfer</h3>
+<p>Inside the <code>AMPL</code> contract it <a href="https://github.com/ampleforth/ampleforth-contracts/blob/ab5abe27fc5b107d9acacd9199809760f35a2ac7/contracts/UFragments.sol#L30-L33">states</a>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">We</span> <span style="color:#000">make</span> <span style="color:#000">the</span> <span style="color:#000">following</span> <span style="color:#f57900">guarantees</span><span style="color:#000;font-weight:bold">:</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">If</span> <span style="color:#000">address</span> <span style="color:#4e9a06">&#39;A&#39;</span> <span style="color:#000">transfers</span> <span style="color:#000">x</span> <span style="color:#000">Fragments</span> <span style="color:#000">to</span> <span style="color:#000">address</span> <span style="color:#4e9a06">&#39;B&#39;</span><span style="color:#000;font-weight:bold">.</span> <span style="color:#000">A</span><span style="color:#a40000">&#39;</span><span style="color:#000">s</span> <span style="color:#000">resulting</span> <span style="color:#000">external</span> <span style="color:#000">balance</span> <span style="color:#000">will</span> <span style="color:#000">be</span> <span style="color:#000">decreased</span> <span style="color:#000">by</span> <span style="color:#000">precisely</span> <span style="color:#000">x</span>
+</span></span><span style="display:flex;"><span><span style="color:#ce5c00;font-weight:bold">&gt;</span> <span style="color:#000">Fragments</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">and</span> <span style="color:#000">B</span><span style="color:#a40000">&#39;</span><span style="color:#000">s</span> <span style="color:#000">external</span> <span style="color:#000">balance</span> <span style="color:#000">will</span> <span style="color:#000">be</span> <span style="color:#000">precisely</span> <span style="color:#000">increased</span> <span style="color:#000">by</span> <span style="color:#000">x</span> <span style="color:#000">Fragments</span><span style="color:#000;font-weight:bold">.</span>
+</span></span></code></pre></div><p>In Solidity:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev A transfer of x AMPLs from A to B results in A&#39;s external balance being decreased by precisely
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">///      x AMPLs and B&#39;s external balance being increased by precisely x AMPLs.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_ExternalBalanceIsPreciseAfterTransfer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Note that the owner and the set of users are the only addresses that may have a non-zero balance.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">before</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">wantIncrease</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">transfer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">wantIncrease</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]),</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">assertEq</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">before</span> <span style="color:#ce5c00;font-weight:bold">+</span> <span style="color:#000">wantIncrease</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">balanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">before</span> <span style="color:#ce5c00;font-weight:bold">+=</span> <span style="color:#000">wantIncrease</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>The requirement that a zero transfer should always succeed is another, admittedly dull, property:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev A transfer of zero AMPL is always possible, independent of whether the `transfer` or `transferFrom`
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">///      function is used.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_ZeroTransferAlwaysPossible</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">user</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">user</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">];</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">startPrank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">user</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">transfer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">user</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transferFrom</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">user</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">user</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">stopPrank</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>An interesting function offered by AMPL is <code>transferAllFrom</code>. We want to state that it is not possible to transfer any
+tokens when the spender&rsquo;s allowance for the owner&rsquo;s tokens is zero. Note that we assume that any call transfering a
+non-zero amount of internal tokens shoud fail.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">/// @dev Function `transferAllFrom` reverts if scaledBalanceOf owner is not zero while allowance from owner to
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">///      spender is zero.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">prop_TransferAllFromRevertsIfAllowanceIsInsufficient</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">spender</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">receiver</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Note that users do not have allowance set for themselves.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">spender</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">];</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">owner</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">];</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">receiver</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">];</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Expect a revert if the scaledBalance, i.e. gon balance, of the owner is unequal to zero.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">bool</span> <span style="color:#000">expectRevert</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">scaledBalanceOf</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#000">expectRevert</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">expectRevert</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">spender</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transferAllFrom</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">receiver</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><h2 id="creating-the-state">Creating the State</h2>
+<p>Having enough properties defined, lets bring the AMPL token into a pseudo-random state and test the properties.</p>
+<p>Copy the following contract into the <code>AMPL.t.sol</code> file:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// SPDX-License-Identifier: GPL-3.0-or-later
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">pragma solidity</span> <span style="color:#ce5c00;font-weight:bold">^</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">7</span><span style="color:#000;font-weight:bold">.</span><span style="color:#0000cf;font-weight:bold">6</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#000">pragma</span> <span style="color:#000">abicoder</span> <span style="color:#000">v2</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">UFragments</span> <span style="color:#204a87;font-weight:bold">as</span> <span style="color:#000">AMPL</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;ampleforth-contracts/UFragments.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span><span style="color:#000">AMPLProp</span><span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">from</span> <span style="color:#4e9a06">&#34;test/AMPL.p.sol&#34;</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">// Note that AMPLTest inherits from AMPLProp.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">contract</span> <span style="color:#000">AMPLTest</span> <span style="color:#204a87;font-weight:bold">is</span> <span style="color:#000">AMPLProp</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000">State</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Privileged addresses
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">owner</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">monetaryPolicy</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Rebases
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">int</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#000">supplyDeltas</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// List of addresses that could have a non-zero balance
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// Note that owner can also have a non-zero balance
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#000">users</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// List of transfers tried to execute
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">uint</span><span style="color:#000;font-weight:bold">[]</span> <span style="color:#000">transfers</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Actual setUp function is not used.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">setUp</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#204a87;font-weight:bold">virtual</span> <span style="color:#000;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// This is our &#34;real&#34; setUp function.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">setUpAMPL</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">State</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">_assumeValidState</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">ampl</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">new</span> <span style="color:#000">AMPL</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">initialize</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">setMonetaryPolicy</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">monetaryPolicy</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Try to execute all transfers from owner to users.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// Note that the owner has the full initial supply and holds the total internal supply.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// The initial total supply is 50M.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transfers</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#204a87;font-weight:bold">try</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">transfer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transfers</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">])</span> <span style="color:#000;font-weight:bold">{}</span> <span style="color:#204a87;font-weight:bold">catch</span> <span style="color:#000;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Try to execute list of rebases.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">supplyDeltas</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">prank</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">monetaryPolicy</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#204a87;font-weight:bold">try</span> <span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">rebase</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">supplyDeltas</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">])</span> <span style="color:#000;font-weight:bold">{}</span> <span style="color:#204a87;font-weight:bold">catch</span> <span style="color:#000;font-weight:bold">{}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Example test function.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">test_prop_TotalSupplyNeverExceedsMaxSupply</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">State</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">public</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// First set up the state...
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">setUpAMPL</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// ...than verify that this state holds the property.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">prop_TotalSupplyNeverExceedsMaxSupply</span><span style="color:#000;font-weight:bold">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Test the rest of the properties here.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">/*//////////////////////////////////////////////////////////////
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">                                HELPERS
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic">    //////////////////////////////////////////////////////////////*/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">mapping</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span> <span style="color:#ce5c00;font-weight:bold">=&gt;</span> <span style="color:#204a87;font-weight:bold">bool</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000">usersCache</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Filter out some non-conforming input. This is mostly specific to internals inside the AMPL token.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">_assumeValidState</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">State</span> <span style="color:#204a87;font-weight:bold">memory</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">internal</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">owner</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">monetaryPolicy</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// User assumptions.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#0000cf;font-weight:bold">10</span><span style="color:#000">e9</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">uint</span> <span style="color:#000">i</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">;</span> <span style="color:#000">i</span><span style="color:#ce5c00;font-weight:bold">++</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#8f5902;font-style:italic">// Make sure user is neither owner nor monetary policy.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">owner</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">monetaryPolicy</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#8f5902;font-style:italic">// Make sure user is valid recipient.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">address</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ampl</span><span style="color:#000;font-weight:bold">));</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#8f5902;font-style:italic">// Make sure user is unique.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#ce5c00;font-weight:bold">!</span><span style="color:#000">usersCache</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]]);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#000">usersCache</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">]]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#204a87;font-weight:bold">true</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Transfer assumptions.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transfers</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">transfers</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span> <span style="color:#ce5c00;font-weight:bold">&lt;=</span> <span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">users</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8f5902;font-style:italic">// Rebase assumptions.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">supplyDeltas</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#000">vm</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">assume</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">state</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">supplyDeltas</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">length</span> <span style="color:#ce5c00;font-weight:bold">&lt;</span> <span style="color:#0000cf;font-weight:bold">1000</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>Note that the <code>AMPLTest</code> contract inherits from the <code>AMPLProp</code> contract.</p>
+<p>We created a <code>function test_prop_TotalSupplyNeverExceedsMaxSupply()</code> that takes a fuzzed argument struct called <code>State</code>.
+The <code>State</code> contains some privileged addresses for the AMPL token, a set of <code>supplyDelta</code>s that we apply to the total
+supply by using AMPL&rsquo;s <code>rebase()</code> function, and a list of user addresses to which we transfer tokens from the owner, by
+using the amounts given in the <code>State</code>&rsquo;s <code>transfers</code> array.</p>
+<p>Each <code>test_</code> function first calls the <code>setUpAMPL()</code> function to apply the <code>State</code> arguments fields to the AMPL instance.
+A lot of the transfer and rebase operations will fail due to overflows, insufficient balances, etc, but we do not care
+too much about the level of entropy we achieve using this simple mechanism.</p>
+<p>(Note: If looking for tools enabling deeper state explorations, check out <a href="https://github.com/crytic/echidna">echidna</a> or <a href="https://docs.scribble.codes/">Scribble</a>)</p>
+<h2 id="execution">Execution</h2>
+<p>Running <code>forge test</code> could now result in an output similar to this:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PASS</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">test_prop_ConversionRate</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">256</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">7942226</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">8305177</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PASS</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">test_prop_ExternalBalanceIsPreciseAfterTransfer</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">256</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">9075672</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">9656829</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PASS</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">test_prop_RebaseIsNonDilutive</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">256</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">7658408</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">7942935</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PASS</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">test_prop_SumOfAllBalancesNeverExceedsMaxSupply</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">256</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">7635333</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">7876323</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PASS</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">test_prop_TotalSupplyNeverExceedsMaxSupply</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">256</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">7049481</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">7347126</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">PASS</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000">test_prop_TotalSupplyNeverZero</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">256</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">7114705</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">7254536</span><span style="color:#000;font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">FAIL</span><span style="color:#000;font-weight:bold">.</span> <span style="color:#f57900">Reason</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">Call</span> <span style="color:#000">did</span> <span style="color:#000">not</span> <span style="color:#000">revert</span> <span style="color:#000">as</span> <span style="color:#000">expected</span> <span style="color:#f57900">Counterexample</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">calldata</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000;font-weight:bold">...,</span> <span style="color:#000">args</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000;font-weight:bold">[...]</span> <span style="color:#000">test_prop_TransferAllFromRevertsIfAllowanceIsInsufficient</span><span style="color:#000;font-weight:bold">((</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">,</span><span style="color:#000">int256</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">address</span><span style="color:#000;font-weight:bold">[],</span><span style="color:#000">uint256</span><span style="color:#000;font-weight:bold">[]))</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#f57900">runs</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">13</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#a40000">μ</span><span style="color:#ce5c00;font-weight:bold">:</span> <span style="color:#0000cf;font-weight:bold">8019120</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">~:</span> <span style="color:#0000cf;font-weight:bold">8272453</span><span style="color:#000;font-weight:bold">)</span>
+</span></span></code></pre></div><p>It appears that at some point, the <code>transferAllFrom</code> function did not revert. This indicates that it was possible to
+transfer some amount without the necessary permission.</p>
+<h2 id="evaluating-the-bug">Evaluating the Bug</h2>
+<p>Here is a screenshot of the relevant section of the failing test&rsquo;s stack trace:</p>
+<p><img src="/post/property-based-testing-ampleforth/transferAllFromFailureStackTrace.png" alt="stack_trace"></p>
+<p>In fact, the transfer function transferred 0 AMPLs, as seen by the stack trace. It did, however, transfer some
+non-zero amount of <code>gons</code>.</p>
+<p>Let&rsquo;s look at the function&rsquo;s implementation to gain a better understanding (comments added for clarity):</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-solidity" data-lang="solidity"><span style="display:flex;"><span><span style="color:#204a87;font-weight:bold">function</span> <span style="color:#000">transferAllFrom</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">address</span> <span style="color:#204a87;font-weight:bold">from</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">address</span> <span style="color:#000">to</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">external</span> <span style="color:#000">validRecipient</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">to</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">returns</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">bool</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Get the internal balance of `from`.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">uint256</span> <span style="color:#000">gonValue</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">_gonBalances</span><span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">from</span><span style="color:#000;font-weight:bold">];</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Calculate the external balance by dividing the internal balance with the rebase conversion rate.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">uint256</span> <span style="color:#204a87">value</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">gonValue</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">div</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">_gonsPerFragment</span><span style="color:#000;font-weight:bold">);</span> <span style="color:#8f5902;font-style:italic">// &lt;-- !!!
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Reverts in case the caller&#39;s allowance is not sufficient to transfer the external balance.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">_allowedFragments</span><span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">from</span><span style="color:#000;font-weight:bold">][</span><span style="color:#204a87">msg</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">sender</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">_allowedFragments</span><span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">from</span><span style="color:#000;font-weight:bold">][</span><span style="color:#204a87">msg</span><span style="color:#000;font-weight:bold">.</span><span style="color:#204a87">sender</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">sub</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87">value</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// Delete the owner&#39;s total internal balance...
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">delete</span> <span style="color:#000">_gonBalances</span><span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">from</span><span style="color:#000;font-weight:bold">];</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8f5902;font-style:italic">// ...and increase the `to`&#39;s internal balance.
+</span></span></span><span style="display:flex;"><span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#000">_gonBalances</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">to</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">_gonBalances</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">to</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">add</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">gonValue</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000">emit</span> <span style="color:#000">Transfer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">from</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">to</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87">value</span><span style="color:#000;font-weight:bold">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">true</span><span style="color:#000;font-weight:bold">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">}</span>
+</span></span></code></pre></div><p>First, notice that the token&rsquo;s allowance - managed via the <code>_allowedFragments</code> mapping - is denominated in AMPL.
+Therefore, the owner&rsquo;s <code>gon</code> balance needs to be converted to its AMPL balance, which includes a division.</p>
+<p>What happens if the <code>gon</code> value divided by the conversion rate is some value between 0 and 1 (exclusiv)?
+Well, the division rounds down to zero.</p>
+<p>This leads to the allowance check being useless, i.e. its being checked whether the spender has at least 0 allowance.</p>
+<p>Via the <code>tranferAllFrom</code> function it is therefore possible to steal from wallets with an AMPL balance of 0, but
+non-zero <code>gons</code> balance.</p>
+<p>However, AMPL&rsquo;s uses 9 decimals and its price target is the <a href="https://www.ampleforth.org/dashboard/">CPI-adjusted 2019 US-Dollar</a>.
+Therefore, one AMPL token in the contract evaluates to ~<code>1.13$ * 1e-9</code>. <strong>This is an exceedingly small amount of value.</strong></p>
+<p>In a personal project of mine - a fork of <a href="https://button.foundation/">Buttonwood</a>&rsquo;s rebasing <a href="https://github.com/buttonwood-protocol/button-wrappers/blob/d9fe31c38957dc0fe8ae63b3546c370394fca7c2/contracts/ButtonToken.sol#L11">ButtonToken</a> -, the <a href="https://github.com/pmerkleplant/elastic-receipt-token/blob/e088eb7fc43f671f3d97f007004be7f0025831f2/src/ElasticReceiptToken.sol#L7">ElasticReceiptToken</a>,
+I fixed the issue by <a href="https://github.com/pmerkleplant/elastic-receipt-token/blob/e088eb7fc43f671f3d97f007004be7f0025831f2/src/ElasticReceiptToken.sol#L279-L284">decrementing the allowance by 1</a>.</p>
+<h2 id="disclaimer">Disclaimer</h2>
+<ul>
+<li>I reported the bug to all (as of my knowledge) affected projects in Februrary 2022</li>
+<li>I received from all the projects the allowance to publish the bug</li>
+<li>Yes, I&rsquo;m a big fan of Ampleforth. It&rsquo;s a beautiful, simple and resilient protocol that actually offers new monetary
+ideas.</li>
+</ul>
+    
+  </article>
+  <div class="paginator">
+    
+    <a class="link" href="https://garden.merkleplant.xyz/post/rugging-erc20-allowances-via-permit2/">← prev</a>
+    
+    
+    <a></a>
+    
+  </div>
+  <div class="comment">
+    
+    
+    
+    
+    
+    
+  </div>
+  
+</main>
+
+    <footer id="footer">
+  <div>
+    <span>© 2019</span> - <span>2022</span>
+  </div>
+
+  <div>
+    <span>Powered by </span>
+    <a class="link" href="https://gohugo.io/">Hugo</a>
+    <span> 🍦 Theme </span>
+    <a class="link" href="https://github.com/queensferryme/hugo-theme-texify">TeXify</a>
+  </div>
+
+  <div class="footnote">
+    <span>Contact me on <a class=link href=https://twitter.com/merkleplant_eth>twitter</a>,
+<a class=link href=https://github.com/pmerkleplant>github</a>, or via
+<a class=link href="mailto:pascal@merkleplant.xyz">email</a> |
+<a class=link href=https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh target=_blank rel=noopener>CC BY-NC-SA 4.0</a>
+</span>
+  </div>
+</footer>
+
+  </div>
+
+  
+  
+
+  
+  
+
+  
+  
+
+</body>
+
+</html>
