@@ -1,7 +1,7 @@
 +++
 author = "merkleplant"
 title = "Property-based Testing Ampleforth"
-date = "2022-12-05"
+date = "2022-12-29"
 +++
 
 In this article, we are going to property-based test Ampleforth’s rebasing AMPL token.
